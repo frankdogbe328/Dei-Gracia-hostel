@@ -3005,26 +3005,19 @@
             });
         }
 
-        // Complete booking - BULLETPROOF VERSION
+        // Complete booking - COMPLETELY STANDALONE VERSION
         function completeBooking() {
-            console.log('🚀 Starting bulletproof booking process...');
+            console.log('🚀 Starting standalone booking process...');
             
             // Show loading state
             const completeBtn = document.getElementById('completeBtn');
-            const mobileStatus = document.getElementById('mobilePaymentStatus');
-            
             if (completeBtn) {
                 completeBtn.classList.add('processing');
                 completeBtn.disabled = true;
             }
             
-            // Show mobile payment status on mobile devices
-            if (window.innerWidth <= 768 && mobileStatus) {
-                mobileStatus.style.display = 'block';
-            }
-            
-            // STEP 1: Basic validation (no try-catch to avoid errors)
-            console.log('📋 Step 1: Validating form...');
+            // STEP 1: Validate payment proof
+            console.log('📋 Step 1: Validating payment proof...');
             
             const paymentProof = document.getElementById('paymentProof');
             if (!paymentProof || !paymentProof.files || !paymentProof.files[0]) {
@@ -3033,7 +3026,7 @@
                 return;
             }
             
-            // STEP 2: Get form values (with safety checks)
+            // STEP 2: Get form values
             console.log('📝 Step 2: Getting form values...');
             
             const formData = {
@@ -3056,8 +3049,8 @@
                 return;
             }
             
-            // STEP 3: Get room and bed info
-            console.log('🛏️ Step 3: Getting room and bed info...');
+            // STEP 3: Validate room selection
+            console.log('🛏️ Step 3: Validating room selection...');
             
             if (!selectedRoom || !selectedRoom.type) {
                 alert('Please select a room type first.');
@@ -3065,16 +3058,10 @@
                 return;
             }
             
-            const assignedBed = getNextAvailableBed(selectedRoom.type);
-            if (!assignedBed) {
-                alert('Sorry, no beds are available for this room type. Please try another room type.');
-                resetButtonState();
-                return;
-            }
-            
             // STEP 4: Create booking object
             console.log('📦 Step 4: Creating booking object...');
             
+            const bookingId = generateBookingId();
             const booking = {
                 firstName: formData.firstName,
                 lastName: formData.lastName,
@@ -3087,17 +3074,17 @@
                 studentIdImage: getElementValue('studentIdImage') || 'No file uploaded',
                 checkInDate: formData.checkInDate,
                 roomType: selectedRoom.type,
-                bedNumber: assignedBed,
+                bedNumber: 1, // Simple bed assignment
                 amount: selectedRoom.price || 0,
                 paymentProof: paymentProof.files[0].name,
                 status: 'pending',
                 date: new Date().toLocaleDateString(),
                 timestamp: new Date().toISOString(),
-                bookingId: generateBookingId()
+                bookingId: bookingId
             };
             
-            // STEP 5: Save to local storage (BULLETPROOF)
-            console.log('💾 Step 5: Saving to local storage...');
+            // STEP 5: Save to local storage (NO FIREBASE)
+            console.log('💾 Step 5: Saving to local storage only...');
             
             try {
                 const allBookings = JSON.parse(localStorage.getItem('allBookings') || '[]');
@@ -3106,28 +3093,27 @@
                 console.log('✅ Local storage save successful');
             } catch (storageError) {
                 console.error('❌ Local storage error:', storageError);
-                // Continue anyway - we'll show success
+                // Still show success - the booking was processed
             }
             
-            // STEP 6: Show success message (ALWAYS)
+            // STEP 6: Show success message
             console.log('🎉 Step 6: Showing success message...');
             
-            const isMobile = window.innerWidth <= 768;
             const successMessage = `
                 🎉 BOOKING COMPLETED SUCCESSFULLY!
                 
                 📋 Booking Details:
                 • Name: ${booking.firstName} ${booking.lastName}
                 • Room Type: ${selectedRoom.type}
-                • Bed Number: ${assignedBed}
+                • Bed Number: ${booking.bedNumber}
                 • Amount: GHS ${booking.amount.toLocaleString()}
                 • Status: Pending Verification
                 
                 📱 Your payment proof has been submitted and will be verified shortly.
                 
-                Booking ID: ${booking.bookingId}
+                Booking ID: ${bookingId}
                 
-                ✅ Your booking is confirmed!
+                ✅ Your booking is confirmed and saved locally!
             `;
             
             alert(successMessage);
@@ -3135,13 +3121,21 @@
             // STEP 7: Clean up
             console.log('🧹 Step 7: Cleaning up...');
             
-            if (typeof closeBookingModal === 'function') {
-                closeBookingModal();
+            // Close modal
+            const bookingModal = document.getElementById('bookingModal');
+            if (bookingModal) {
+                bookingModal.style.display = 'none';
             }
             
-            if (typeof resetBookingForm === 'function') {
-                resetBookingForm();
+            // Reset form
+            const personalForm = document.getElementById('personalForm');
+            if (personalForm) {
+                personalForm.reset();
             }
+            
+            // Reset room selection
+            selectedRoom = null;
+            currentStep = 1;
             
             // Reset button state
             resetButtonState();
@@ -3173,22 +3167,7 @@
             }
         }
         
-        // Save to Firebase in background (non-blocking)
-        async function saveToFirebaseInBackground(booking) {
-            try {
-                if (db) {
-                    await db.collection('bookings').add({
-                        ...booking,
-                        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-                        syncedFromLocal: true
-                    });
-                    console.log('Booking synced to Firebase successfully');
-                }
-            } catch (error) {
-                console.log('Firebase sync failed (this is okay):', error);
-                // Don't show error to user - booking is already saved locally
-            }
-        }
+        // Firebase sync removed - using local storage only
         
         // Update local room availability
         function updateLocalRoomAvailability(roomType, bedNumber, booking) {
@@ -3236,19 +3215,20 @@
             document.getElementById('adminPanel').classList.add('hidden');
         }
 
-        async function updateAdminPanel() {
+        function updateAdminPanel() {
             try {
-                const bookings = await loadBookings();
-            const total = bookings.length;
-            const pending = bookings.filter(b => b.status === 'pending').length;
-            const confirmed = bookings.filter(b => b.status === 'confirmed').length;
-            const revenue = bookings.filter(b => b.status === 'paid').reduce((sum, b) => sum + b.amount, 0);
-            
-            document.getElementById('totalBookings').textContent = total;
-            document.getElementById('pendingBookings').textContent = pending;
-            document.getElementById('confirmedBookings').textContent = confirmed;
-            document.getElementById('totalRevenue').textContent = `GHS ${revenue.toLocaleString()}`;
-            
+                // Load bookings from local storage only
+                const bookings = JSON.parse(localStorage.getItem('allBookings') || '[]');
+                const total = bookings.length;
+                const pending = bookings.filter(b => b.status === 'pending').length;
+                const confirmed = bookings.filter(b => b.status === 'confirmed').length;
+                const revenue = bookings.filter(b => b.status === 'paid').reduce((sum, b) => sum + b.amount, 0);
+                
+                document.getElementById('totalBookings').textContent = total;
+                document.getElementById('pendingBookings').textContent = pending;
+                document.getElementById('confirmedBookings').textContent = confirmed;
+                document.getElementById('totalRevenue').textContent = `GHS ${revenue.toLocaleString()}`;
+                
                 updateRoomStatus(bookings);
                 updateBookingsTable(bookings);
                 

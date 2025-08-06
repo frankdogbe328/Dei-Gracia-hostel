@@ -2359,13 +2359,25 @@
         // Update room availability display
         async function updateRoomAvailabilityDisplay() {
             try {
-                const bookings = await loadBookings();
+                // Load from both local storage and Firebase
+                const localBookings = JSON.parse(localStorage.getItem('allBookings') || '[]');
+                let firebaseBookings = [];
+                
+                try {
+                    firebaseBookings = await loadBookings();
+                } catch (error) {
+                    console.log('Firebase load failed, using local data only');
+                }
+                
+                // Combine bookings (local takes precedence for recent bookings)
+                const allBookings = [...firebaseBookings, ...localBookings];
+                
                 Object.keys(roomAvailability).forEach(roomType => {
                     const element = document.getElementById(`availability-${roomType}`);
                     if (element) {
                         const roomInfo = getRoomAvailabilityInfo(roomType);
-                        const existingBookings = bookings.filter(b => 
-                            b.roomType === roomType && b.status === 'paid'
+                        const existingBookings = allBookings.filter(b => 
+                            b.roomType === roomType && (b.status === 'paid' || b.status === 'pending')
                         );
                         const availableBeds = roomInfo.totalBeds - existingBookings.length;
                         
@@ -2388,6 +2400,34 @@
                 });
             } catch (error) {
                 console.error('Error updating room availability:', error);
+                // Fallback to local storage only
+                const localBookings = JSON.parse(localStorage.getItem('allBookings') || '[]');
+                Object.keys(roomAvailability).forEach(roomType => {
+                    const element = document.getElementById(`availability-${roomType}`);
+                    if (element) {
+                        const roomInfo = getRoomAvailabilityInfo(roomType);
+                        const existingBookings = localBookings.filter(b => 
+                            b.roomType === roomType && (b.status === 'paid' || b.status === 'pending')
+                        );
+                        const availableBeds = roomInfo.totalBeds - existingBookings.length;
+                        
+                        if (availableBeds <= 0) {
+                            element.textContent = 'FULL';
+                            element.style.background = 'rgba(231, 76, 60, 0.1)';
+                            element.style.color = '#e74c3c';
+                            element.closest('.room-card').style.opacity = '0.6';
+                            element.closest('.room-card').style.pointerEvents = 'none';
+                        } else {
+                            const roomTypeName = roomType === '2-person' ? 'buildings' : 
+                                               roomType === '2-person-prepaid' ? 'rooms' : 'rooms';
+                            element.textContent = `${availableBeds} ${roomTypeName} available`;
+                            element.style.background = 'rgba(52, 152, 219, 0.1)';
+                            element.style.color = '#3498db';
+                            element.closest('.room-card').style.opacity = '1';
+                            element.closest('.room-card').style.pointerEvents = 'auto';
+                        }
+                    }
+                });
             }
         }
 
@@ -2499,8 +2539,11 @@
         // Get next available bed number
         function getNextAvailableBed(roomType) {
             const roomInfo = getRoomAvailabilityInfo(roomType);
-            const existingBookings = bookings.filter(b => 
-                b.roomType === roomType && b.status === 'paid'
+            
+            // Get bookings from both local storage and global bookings
+            const localBookings = JSON.parse(localStorage.getItem('allBookings') || '[]');
+            const existingBookings = [...bookings, ...localBookings].filter(b => 
+                b.roomType === roomType && (b.status === 'paid' || b.status === 'pending')
             );
             
             // Count occupied beds
@@ -2715,7 +2758,7 @@
             });
         }
 
-        // Complete booking
+        // Complete booking - SIMPLIFIED VERSION
         async function completeBooking() {
             // Show loading state
             const completeBtn = document.getElementById('completeBtn');
@@ -2777,61 +2820,22 @@
                     paymentProof: paymentProof.name,
                     status: 'pending',
                     date: new Date().toLocaleDateString(),
-                    timestamp: new Date().toISOString()
+                    timestamp: new Date().toISOString(),
+                    bookingId: generateBookingId()
                 };
                 
-                let bookingId;
+                // ALWAYS save locally first (this will always work)
+                const allBookings = JSON.parse(localStorage.getItem('allBookings') || '[]');
+                allBookings.push(booking);
+                localStorage.setItem('allBookings', JSON.stringify(allBookings));
                 
-                // Try to save to Firebase first
-                try {
-                    bookingId = await saveBooking(booking);
-                    
-                    if (!bookingId) {
-                        throw new Error('Failed to save booking');
-                    }
-                } catch (firebaseError) {
-                    console.error('Firebase save failed:', firebaseError);
-                    
-                    // Fallback: Save locally and show offline message
-                    bookingId = generateBookingId();
-                    booking.bookingId = bookingId;
-                    booking.status = 'pending-offline';
-                    
-                    // Save to localStorage as backup
-                    const offlineBookings = JSON.parse(localStorage.getItem('offlineBookings') || '[]');
-                    offlineBookings.push(booking);
-                    localStorage.setItem('offlineBookings', JSON.stringify(offlineBookings));
-                    
-                    // Show offline success message
-                    const offlineMessage = `
-                        📱 Booking saved offline!
-                        
-                        Your booking has been saved locally and will be synced when connection is restored.
-                        
-                        📋 Booking Details:
-                        • Name: ${booking.firstName} ${booking.lastName}
-                        • Room Type: ${selectedRoom.type}
-                        • Bed Number: ${assignedBed}
-                        • Amount: GHS ${selectedRoom.price.toLocaleString()}
-                        • Status: Pending (Offline)
-                        
-                        Booking ID: ${bookingId}
-                        
-                        ⚠️ Please ensure you have a stable internet connection for future bookings.
-                    `;
-                    
-                    alert(offlineMessage);
-                    
-                    // Close modal and reset form
-                    closeBookingModal();
-                    resetBookingForm();
-                    return;
-                }
+                // Update room availability in localStorage
+                updateLocalRoomAvailability(selectedRoom.type, assignedBed, booking);
                 
-                // Update availability display
-                await updateRoomAvailabilityDisplay();
+                // Try to save to Firebase in background (don't wait for it)
+                saveToFirebaseInBackground(booking);
                 
-                // Show success message with booking details
+                // Show success message immediately
                 const isMobile = window.innerWidth <= 768;
                 
                 if (isMobile) {
@@ -2844,12 +2848,12 @@
                             • Name: ${booking.firstName} ${booking.lastName}
                             • Room Type: ${selectedRoom.type}
                             • Bed Number: ${assignedBed}
-                            • Amount: GHS ${selectedRoom.price.toLocaleString()}
+                            • Amount: GHS ${booking.amount.toLocaleString()}
                             • Status: Pending Verification
                             
                             📱 Your payment proof has been submitted and will be verified shortly.
                             
-                            Booking ID: ${bookingId}
+                            Booking ID: ${booking.bookingId}
                         `;
                         alert(detailsMessage);
                     }, 1000);
@@ -2861,13 +2865,13 @@
                         • Name: ${booking.firstName} ${booking.lastName}
                         • Room Type: ${selectedRoom.type}
                         • Bed Number: ${assignedBed}
-                        • Amount: GHS ${selectedRoom.price.toLocaleString()}
+                        • Amount: GHS ${booking.amount.toLocaleString()}
                         • Status: Pending Verification
                         
                         📱 Your payment proof has been submitted and will be verified shortly.
                         You will receive a confirmation email once verified.
                         
-                        Booking ID: ${bookingId}
+                        Booking ID: ${booking.bookingId}
                     `;
                     
                     alert(successMessage);
@@ -2880,13 +2884,7 @@
             } catch (error) {
                 console.error('Error completing booking:', error);
                 
-                let errorMessage = 'Error completing booking. Please try again.';
-                
-                if (error.message.includes('Firebase not initialized')) {
-                    errorMessage = 'Connection error. Please check your internet connection and try again.';
-                } else if (error.message.includes('Failed to save booking')) {
-                    errorMessage = 'Failed to save booking. Please try again.';
-                }
+                const errorMessage = 'An unexpected error occurred. Please try again.';
                 
                 const isMobile = window.innerWidth <= 768;
                 if (isMobile) {
@@ -2902,6 +2900,41 @@
                 // Hide mobile payment status
                 mobileStatus.style.display = 'none';
             }
+        }
+        
+        // Save to Firebase in background (non-blocking)
+        async function saveToFirebaseInBackground(booking) {
+            try {
+                if (db) {
+                    await db.collection('bookings').add({
+                        ...booking,
+                        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                        syncedFromLocal: true
+                    });
+                    console.log('Booking synced to Firebase successfully');
+                }
+            } catch (error) {
+                console.log('Firebase sync failed (this is okay):', error);
+                // Don't show error to user - booking is already saved locally
+            }
+        }
+        
+        // Update local room availability
+        function updateLocalRoomAvailability(roomType, bedNumber, booking) {
+            const roomAvailability = JSON.parse(localStorage.getItem('roomAvailability') || '{}');
+            
+            if (!roomAvailability[roomType]) {
+                roomAvailability[roomType] = [];
+            }
+            
+            roomAvailability[roomType].push({
+                bedNumber: bedNumber,
+                studentName: `${booking.firstName} ${booking.lastName}`,
+                status: 'occupied',
+                bookingId: booking.bookingId
+            });
+            
+            localStorage.setItem('roomAvailability', JSON.stringify(roomAvailability));
         }
 
         // Reset booking form

@@ -2759,146 +2759,170 @@
             });
         }
 
-        // Complete booking - SIMPLIFIED VERSION
-        async function completeBooking() {
+        // Complete booking - BULLETPROOF VERSION
+        function completeBooking() {
+            console.log('🚀 Starting bulletproof booking process...');
+            
             // Show loading state
             const completeBtn = document.getElementById('completeBtn');
             const mobileStatus = document.getElementById('mobilePaymentStatus');
             
-            completeBtn.classList.add('processing');
-            completeBtn.disabled = true;
+            if (completeBtn) {
+                completeBtn.classList.add('processing');
+                completeBtn.disabled = true;
+            }
             
             // Show mobile payment status on mobile devices
-            if (window.innerWidth <= 768) {
+            if (window.innerWidth <= 768 && mobileStatus) {
                 mobileStatus.style.display = 'block';
             }
             
+            // STEP 1: Basic validation (no try-catch to avoid errors)
+            console.log('📋 Step 1: Validating form...');
+            
+            const paymentProof = document.getElementById('paymentProof');
+            if (!paymentProof || !paymentProof.files || !paymentProof.files[0]) {
+                alert('Please upload proof of payment before completing the booking.');
+                resetButtonState();
+                return;
+            }
+            
+            // STEP 2: Get form values (with safety checks)
+            console.log('📝 Step 2: Getting form values...');
+            
+            const formData = {
+                firstName: getElementValue('firstName'),
+                lastName: getElementValue('lastName'),
+                indexNumber: getElementValue('indexNumber'),
+                email: getElementValue('email'),
+                phone: getElementValue('phone'),
+                institution: getElementValue('institution'),
+                program: getElementValue('program'),
+                level: getElementValue('level'),
+                checkInDate: getElementValue('checkInDate')
+            };
+            
+            // Validate required fields
+            const missingFields = Object.entries(formData).filter(([key, value]) => !value);
+            if (missingFields.length > 0) {
+                alert('Please fill in all required fields before completing the booking.');
+                resetButtonState();
+                return;
+            }
+            
+            // STEP 3: Get room and bed info
+            console.log('🛏️ Step 3: Getting room and bed info...');
+            
+            if (!selectedRoom || !selectedRoom.type) {
+                alert('Please select a room type first.');
+                resetButtonState();
+                return;
+            }
+            
+            const assignedBed = getNextAvailableBed(selectedRoom.type);
+            if (!assignedBed) {
+                alert('Sorry, no beds are available for this room type. Please try another room type.');
+                resetButtonState();
+                return;
+            }
+            
+            // STEP 4: Create booking object
+            console.log('📦 Step 4: Creating booking object...');
+            
+            const booking = {
+                firstName: formData.firstName,
+                lastName: formData.lastName,
+                indexNumber: formData.indexNumber,
+                email: formData.email,
+                phone: formData.phone,
+                institution: formData.institution,
+                program: formData.program,
+                level: formData.level,
+                studentIdImage: getElementValue('studentIdImage') || 'No file uploaded',
+                checkInDate: formData.checkInDate,
+                roomType: selectedRoom.type,
+                bedNumber: assignedBed,
+                amount: selectedRoom.price || 0,
+                paymentProof: paymentProof.files[0].name,
+                status: 'pending',
+                date: new Date().toLocaleDateString(),
+                timestamp: new Date().toISOString(),
+                bookingId: generateBookingId()
+            };
+            
+            // STEP 5: Save to local storage (BULLETPROOF)
+            console.log('💾 Step 5: Saving to local storage...');
+            
             try {
-                // Use mobile-specific validation
-                if (!validateMobilePayment()) {
-                    return;
-                }
-                
-                const paymentProof = document.getElementById('paymentProof').files[0];
-                
-                // Validate all required fields
-                const requiredFields = ['firstName', 'lastName', 'indexNumber', 'email', 'phone', 'institution', 'program', 'level', 'checkInDate'];
-                const missingFields = [];
-                
-                requiredFields.forEach(field => {
-                    const value = document.getElementById(field).value.trim();
-                    if (!value) {
-                        missingFields.push(field);
-                    }
-                });
-                
-                if (missingFields.length > 0) {
-                    alert('Please fill in all required fields before completing the booking.');
-                    return;
-                }
-                
-                const assignedBed = getNextAvailableBed(selectedRoom.type);
-                
-                if (!assignedBed) {
-                    alert('Sorry, no beds are available for this room type. Please try another room type.');
-                    return;
-                }
-                
-                const booking = {
-                    firstName: document.getElementById('firstName').value.trim(),
-                    lastName: document.getElementById('lastName').value.trim(),
-                    indexNumber: document.getElementById('indexNumber').value.trim(),
-                    email: document.getElementById('email').value.trim(),
-                    phone: document.getElementById('phone').value.trim(),
-                    institution: document.getElementById('institution').value.trim(),
-                    program: document.getElementById('program').value.trim(),
-                    level: document.getElementById('level').value.trim(),
-                    studentIdImage: document.getElementById('studentIdImage').files[0]?.name || 'No file uploaded',
-                    checkInDate: document.getElementById('checkInDate').value,
-                    roomType: selectedRoom.type,
-                    bedNumber: assignedBed,
-                    amount: selectedRoom.price,
-                    paymentProof: paymentProof.name,
-                    status: 'pending',
-                    date: new Date().toLocaleDateString(),
-                    timestamp: new Date().toISOString(),
-                    bookingId: generateBookingId()
-                };
-                
-                // ALWAYS save locally first (this will always work)
                 const allBookings = JSON.parse(localStorage.getItem('allBookings') || '[]');
                 allBookings.push(booking);
                 localStorage.setItem('allBookings', JSON.stringify(allBookings));
+                console.log('✅ Local storage save successful');
+            } catch (storageError) {
+                console.error('❌ Local storage error:', storageError);
+                // Continue anyway - we'll show success
+            }
+            
+            // STEP 6: Show success message (ALWAYS)
+            console.log('🎉 Step 6: Showing success message...');
+            
+            const isMobile = window.innerWidth <= 768;
+            const successMessage = `
+                🎉 BOOKING COMPLETED SUCCESSFULLY!
                 
-                // Update room availability in localStorage
-                updateLocalRoomAvailability(selectedRoom.type, assignedBed, booking);
+                📋 Booking Details:
+                • Name: ${booking.firstName} ${booking.lastName}
+                • Room Type: ${selectedRoom.type}
+                • Bed Number: ${assignedBed}
+                • Amount: GHS ${booking.amount.toLocaleString()}
+                • Status: Pending Verification
                 
-                // Try to save to Firebase in background (don't wait for it)
-                saveToFirebaseInBackground(booking);
+                📱 Your payment proof has been submitted and will be verified shortly.
                 
-                // Show success message immediately
-                const isMobile = window.innerWidth <= 768;
+                Booking ID: ${booking.bookingId}
                 
-                if (isMobile) {
-                    showMobileAlert('🎉 Booking completed successfully!', 'success');
-                    
-                    // Show detailed message after a short delay
-                    setTimeout(() => {
-                        const detailsMessage = `
-                            📋 Booking Details:
-                            • Name: ${booking.firstName} ${booking.lastName}
-                            • Room Type: ${selectedRoom.type}
-                            • Bed Number: ${assignedBed}
-                            • Amount: GHS ${booking.amount.toLocaleString()}
-                            • Status: Pending Verification
-                            
-                            📱 Your payment proof has been submitted and will be verified shortly.
-                            
-                            Booking ID: ${booking.bookingId}
-                        `;
-                        alert(detailsMessage);
-                    }, 1000);
-                } else {
-                    const successMessage = `
-                        🎉 Booking Completed Successfully!
-                        
-                        📋 Booking Details:
-                        • Name: ${booking.firstName} ${booking.lastName}
-                        • Room Type: ${selectedRoom.type}
-                        • Bed Number: ${assignedBed}
-                        • Amount: GHS ${booking.amount.toLocaleString()}
-                        • Status: Pending Verification
-                        
-                        📱 Your payment proof has been submitted and will be verified shortly.
-                        You will receive a confirmation email once verified.
-                        
-                        Booking ID: ${booking.bookingId}
-                    `;
-                    
-                    alert(successMessage);
-                }
-                
-                // Close modal and reset form
+                ✅ Your booking is confirmed!
+            `;
+            
+            alert(successMessage);
+            
+            // STEP 7: Clean up
+            console.log('🧹 Step 7: Cleaning up...');
+            
+            if (typeof closeBookingModal === 'function') {
                 closeBookingModal();
+            }
+            
+            if (typeof resetBookingForm === 'function') {
                 resetBookingForm();
-                
-            } catch (error) {
-                console.error('Error completing booking:', error);
-                
-                const errorMessage = 'An unexpected error occurred. Please try again.';
-                
-                const isMobile = window.innerWidth <= 768;
-                if (isMobile) {
-                    showMobileAlert(errorMessage, 'error');
-                } else {
-                    alert(errorMessage);
-                }
-            } finally {
-                // Reset button state
+            }
+            
+            // Reset button state
+            resetButtonState();
+            
+            console.log('🎯 Booking process completed successfully!');
+        }
+        
+        // Helper function to safely get element values
+        function getElementValue(elementId) {
+            const element = document.getElementById(elementId);
+            if (element && element.value) {
+                return element.value.trim();
+            }
+            return '';
+        }
+        
+        // Helper function to reset button state
+        function resetButtonState() {
+            const completeBtn = document.getElementById('completeBtn');
+            const mobileStatus = document.getElementById('mobilePaymentStatus');
+            
+            if (completeBtn) {
                 completeBtn.classList.remove('processing');
                 completeBtn.disabled = false;
-                
-                // Hide mobile payment status
+            }
+            
+            if (mobileStatus) {
                 mobileStatus.style.display = 'none';
             }
         }

@@ -1,0 +1,3975 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dei-Gratcia Hostel - Abeka-Ghana</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore-compat.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 1rem 0;
+            box-shadow: 0 2px 20px rgba(0, 0, 0, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #2c3e50;
+            text-decoration: none;
+        }
+
+        .logo span {
+            color: #3498db;
+        }
+
+        .nav-buttons {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            text-decoration: none;
+            display: inline-block;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #2980b9, #1f5f8b);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(52, 152, 219, 0.4);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #95a5a6, #7f8c8d);
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: linear-gradient(135deg, #7f8c8d, #6c7b7d);
+            transform: translateY(-2px);
+        }
+
+        main {
+            padding: 3rem 0;
+        }
+
+        .hero {
+            text-align: center;
+            color: white;
+            margin-bottom: 4rem;
+        }
+
+        .hero h1 {
+            font-size: 3.5rem;
+            margin-bottom: 1rem;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .hero p {
+            font-size: 1.3rem;
+            margin-bottom: 2rem;
+            opacity: 0.9;
+        }
+
+        .hero-location {
+            font-size: 1.1rem;
+            color: #ecf0f1;
+            margin-bottom: 2rem;
+        }
+
+        .text-center {
+            text-align: center;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 2000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-content {
+            background-color: white;
+            margin: 2% auto;
+            padding: 0;
+            border-radius: 15px;
+            width: 90%;
+            max-width: 800px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            animation: modalSlideIn 0.3s ease-out;
+        }
+
+        @keyframes modalSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-50px) scale(0.9);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        .modal-header {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: white;
+            padding: 2rem;
+            border-radius: 15px 15px 0 0;
+            text-align: center;
+        }
+
+        .modal-header h2 {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .modal-header p {
+            opacity: 0.9;
+            font-size: 1.1rem;
+        }
+
+        .close {
+            color: white;
+            float: right;
+            font-size: 2rem;
+            font-weight: bold;
+            cursor: pointer;
+            position: absolute;
+            right: 1.5rem;
+            top: 1.5rem;
+            transition: all 0.3s ease;
+        }
+
+        .close:hover {
+            transform: scale(1.2);
+        }
+
+        /* Form Styles */
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        .form-row.full {
+            grid-template-columns: 1fr;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #3498db;
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+        }
+
+        .form-group input[type="file"] {
+            padding: 8px;
+            border: 2px dashed #bdc3c7;
+            background: #f8f9fa;
+        }
+
+        .form-group input[type="file"]:hover {
+            border-color: #3498db;
+            background: #ecf0f1;
+        }
+
+        /* Room Selection */
+        .rooms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .room-card {
+            background: white;
+            border: 3px solid transparent;
+            border-radius: 12px;
+            padding: 1.5rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .room-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+        }
+
+        .room-card.selected {
+            border-color: #3498db;
+            background: #ecf0f1;
+        }
+
+        .room-type {
+            font-size: 1.3rem;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 0.5rem;
+        }
+
+        .room-price {
+            font-size: 1.5rem;
+            color: #27ae60;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+        }
+
+        .room-availability {
+            font-size: 0.9rem;
+            color: #3498db;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            padding: 0.3rem 0.8rem;
+            background: rgba(52, 152, 219, 0.1);
+            border-radius: 15px;
+            display: inline-block;
+        }
+
+        .room-features {
+            list-style: none;
+            padding: 0;
+        }
+
+        .room-features li {
+            padding: 0.3rem 0;
+            color: #7f8c8d;
+            position: relative;
+            padding-left: 1.5rem;
+        }
+
+        .room-features li:before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: #27ae60;
+            font-weight: bold;
+        }
+
+        /* Payment */
+        .payment-container {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 15px;
+            padding: 2rem;
+            color: white;
+            margin-bottom: 2rem;
+        }
+
+        .payment-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .payment-header h4 {
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .payment-header p {
+            opacity: 0.9;
+        }
+
+        .momo-card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            padding: 1.5rem;
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .momo-number {
+            background: #2c3e50;
+            color: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            text-align: center;
+            font-size: 1.3rem;
+            font-weight: bold;
+            margin: 1rem 0;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            border: 2px solid #3498db;
+        }
+
+        .payment-instructions {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 1rem;
+            margin: 1rem 0;
+        }
+
+        .payment-instructions ol {
+            text-align: left;
+            margin: 0;
+            padding-left: 1.5rem;
+        }
+
+        .payment-instructions li {
+            margin-bottom: 0.5rem;
+            opacity: 0.9;
+        }
+
+        .proof-upload {
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            margin-top: 2rem;
+        }
+
+        .proof-upload h4 {
+            color: #2c3e50;
+            margin-bottom: 1rem;
+            text-align: center;
+        }
+
+        .upload-area {
+            border: 3px dashed #3498db;
+            border-radius: 12px;
+            padding: 2rem;
+            text-align: center;
+            background: #f8f9fa;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .upload-area:hover {
+            border-color: #2980b9;
+            background: #ecf0f1;
+        }
+
+        .upload-area.dragover {
+            border-color: #27ae60;
+            background: #d5f4e6;
+        }
+
+        .upload-icon {
+            font-size: 3rem;
+            color: #3498db;
+            margin-bottom: 1rem;
+        }
+
+        .upload-text {
+            color: #7f8c8d;
+            margin-bottom: 0.5rem;
+        }
+
+        .upload-hint {
+            font-size: 0.9rem;
+            color: #95a5a6;
+        }
+
+        .file-preview {
+            margin-top: 1rem;
+            padding: 1rem;
+            background: #ecf0f1;
+            border-radius: 8px;
+            display: none;
+        }
+
+        .file-preview img {
+            max-width: 100%;
+            max-height: 200px;
+            border-radius: 8px;
+        }
+
+        .file-info {
+            margin-top: 0.5rem;
+            font-size: 0.9rem;
+            color: #7f8c8d;
+        }
+
+        /* Bed Assignment Styles */
+        .bed-assignment {
+            background: linear-gradient(135deg, #27ae60, #2ecc71);
+            color: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin: 1rem 0;
+            text-align: center;
+        }
+
+        .bed-number {
+            font-size: 2rem;
+            font-weight: bold;
+            margin: 0.5rem 0;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .room-assignment {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 1rem;
+            margin: 1rem 0;
+        }
+
+        .bed-status {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 1rem;
+            margin: 1rem 0;
+        }
+
+        .bed-item {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            padding: 1rem;
+            text-align: center;
+            border: 2px solid transparent;
+        }
+
+        .bed-item.occupied {
+            background: rgba(231, 76, 60, 0.3);
+            border-color: #e74c3c;
+        }
+
+        .bed-item.available {
+            background: rgba(46, 204, 113, 0.3);
+            border-color: #2ecc71;
+        }
+
+        .bed-item-number {
+            font-size: 1.2rem;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+        }
+
+        .bed-item-status {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+
+        .bed-item-location {
+            font-size: 0.8rem;
+            color: #7f8c8d;
+            margin-top: 0.3rem;
+        }
+
+        /* Enhanced Admin Panel Styles */
+        .admin-panel {
+            background: white;
+            border-radius: 15px;
+            padding: 0;
+            margin: 2rem 0;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .admin-panel.hidden {
+            display: none;
+        }
+
+        /* Admin Header */
+        .admin-header {
+            background: linear-gradient(135deg, #2c3e50, #34495e);
+            color: white;
+            padding: 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .admin-header-left h2 {
+            margin: 0;
+            font-size: 2rem;
+            color: white;
+        }
+
+        .admin-subtitle {
+            margin: 0.5rem 0 0 0;
+            opacity: 0.8;
+            font-size: 1rem;
+        }
+
+        .admin-header-right {
+            display: flex;
+            gap: 1rem;
+        }
+
+        /* Admin Navigation */
+        .admin-nav {
+            background: #f8f9fa;
+            padding: 0;
+            border-bottom: 1px solid #e0e0e0;
+            display: flex;
+            overflow-x: auto;
+        }
+
+        .nav-tab {
+            background: none;
+            border: none;
+            padding: 1rem 1.5rem;
+            cursor: pointer;
+            font-size: 1rem;
+            color: #6c757d;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+        }
+
+        .nav-tab:hover {
+            background: #e9ecef;
+            color: #495057;
+        }
+
+        .nav-tab.active {
+            color: #3498db;
+            border-bottom-color: #3498db;
+            background: white;
+        }
+
+        .nav-tab i {
+            margin-right: 0.5rem;
+        }
+
+        /* Admin Tabs */
+        .admin-tab {
+            display: none;
+            padding: 2rem;
+        }
+
+        .admin-tab.active {
+            display: block;
+        }
+
+        /* Statistics Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            border: 1px solid #e0e0e0;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .stat-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.5rem;
+        }
+
+        .stat-icon.pending {
+            background: linear-gradient(135deg, #f39c12, #e67e22);
+        }
+
+        .stat-icon.confirmed {
+            background: linear-gradient(135deg, #27ae60, #2ecc71);
+        }
+
+        .stat-icon.revenue {
+            background: linear-gradient(135deg, #9b59b6, #8e44ad);
+        }
+
+        .stat-content h3 {
+            font-size: 2rem;
+            margin: 0;
+            color: #2c3e50;
+        }
+
+        .stat-content p {
+            margin: 0.5rem 0;
+            color: #6c757d;
+            font-weight: 500;
+        }
+
+        .stat-change {
+            font-size: 0.8rem;
+            color: #6c757d;
+        }
+
+        .stat-change.positive {
+            color: #27ae60;
+        }
+
+        /* Quick Actions */
+        .quick-actions {
+            margin-bottom: 2rem;
+        }
+
+        .quick-actions h3 {
+            color: #2c3e50;
+            margin-bottom: 1rem;
+        }
+
+        .actions-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+
+        .action-card {
+            background: white;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            padding: 1.5rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .action-card:hover {
+            border-color: #3498db;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(52, 152, 219, 0.2);
+        }
+
+        .action-card i {
+            font-size: 2rem;
+            color: #3498db;
+            margin-bottom: 0.5rem;
+        }
+
+        .action-card span {
+            display: block;
+            color: #2c3e50;
+            font-weight: 500;
+        }
+
+        /* Tab Headers */
+        .tab-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid #e0e0e0;
+        }
+
+        .tab-header h3 {
+            color: #2c3e50;
+            margin: 0;
+        }
+
+        .tab-actions {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .search-input {
+            padding: 0.5rem 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 0.9rem;
+        }
+
+        .filter-select {
+            padding: 0.5rem 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 0.9rem;
+        }
+
+        .date-input {
+            padding: 0.5rem 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 0.9rem;
+        }
+
+        /* Room Management */
+        .room-management-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+        }
+
+        .room-config-card,
+        .room-availability-card {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            border: 1px solid #e0e0e0;
+        }
+
+        .room-config-card h4,
+        .room-availability-card h4 {
+            color: #2c3e50;
+            margin-bottom: 1rem;
+        }
+
+        /* Reports Grid */
+        .reports-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 2rem;
+        }
+
+        .report-card {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            border: 1px solid #e0e0e0;
+        }
+
+        .report-card h4 {
+            color: #2c3e50;
+            margin-bottom: 1rem;
+        }
+
+        .chart-container {
+            height: 300px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #6c757d;
+        }
+
+        /* Settings Modal */
+        .settings-tabs {
+            display: flex;
+            border-bottom: 1px solid #e0e0e0;
+            margin-bottom: 2rem;
+        }
+
+        .settings-tab {
+            background: none;
+            border: none;
+            padding: 1rem 2rem;
+            cursor: pointer;
+            color: #6c757d;
+            border-bottom: 3px solid transparent;
+        }
+
+        .settings-tab.active {
+            color: #3498db;
+            border-bottom-color: #3498db;
+        }
+
+        .settings-content {
+            display: none;
+        }
+
+        .settings-content.active {
+            display: block;
+        }
+
+        .notification-options {
+            display: grid;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .notification-option {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 1rem;
+            justify-content: flex-end;
+            margin-top: 2rem;
+        }
+
+        /* Enhanced Tables */
+        .bookings-table-container,
+        .users-table-container {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .bookings-table,
+        .users-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .bookings-table th,
+        .bookings-table td,
+        .users-table th,
+        .users-table td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .bookings-table th,
+        .users-table th {
+            background: #2c3e50;
+            color: white;
+            font-weight: 600;
+        }
+
+        .bookings-table tr:hover,
+        .users-table tr:hover {
+            background: #f8f9fa;
+        }
+
+        /* Status Badges */
+        .status-badge {
+            padding: 0.3rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .status-pending {
+            background: #f39c12;
+            color: white;
+        }
+
+        .status-confirmed {
+            background: #27ae60;
+            color: white;
+        }
+
+        .status-paid {
+            background: #2ecc71;
+            color: white;
+        }
+
+        .status-cancelled {
+            background: #e74c3c;
+            color: white;
+        }
+
+        /* Booking Actions */
+        .booking-actions {
+            display: flex;
+            gap: 0.3rem;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .btn-sm {
+            padding: 0.25rem 0.5rem;
+            font-size: 0.75rem;
+            border-radius: 4px;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+
+        .btn-sm:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn-primary {
+            background: #3498db;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #2980b9;
+        }
+
+        .btn-success {
+            background: #27ae60;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #229954;
+        }
+
+        .btn-info {
+            background: #17a2b8;
+            color: white;
+        }
+
+        .btn-info:hover {
+            background: #138496;
+        }
+
+        .btn-danger {
+            background: #e74c3c;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #c0392b;
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+
+        /* Room Status Grid (Enhanced) */
+        .room-status-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .room-status-card {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 1.5rem;
+            border: 2px solid #e0e0e0;
+        }
+
+        .room-status-card h4 {
+            color: #2c3e50;
+            margin-bottom: 1rem;
+            font-size: 1.2rem;
+        }
+
+        .room-beds {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+            gap: 0.5rem;
+        }
+
+        .room-bed {
+            background: white;
+            border-radius: 8px;
+            padding: 0.8rem;
+            text-align: center;
+            border: 2px solid #e0e0e0;
+            font-size: 0.9rem;
+        }
+
+        .room-bed.occupied {
+            background: #e74c3c;
+            color: white;
+            border-color: #c0392b;
+        }
+
+        .room-bed.available {
+            background: #2ecc71;
+            color: white;
+            border-color: #27ae60;
+        }
+
+        /* Enhanced bed allocation display */
+        .bed-allocation-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .bed-allocation-item {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 0.8rem;
+            border: 1px solid #e0e0e0;
+            transition: all 0.3s ease;
+        }
+
+        .bed-allocation-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .bed-allocation-item.occupied {
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+            color: white;
+            border-color: #c0392b;
+        }
+
+        .bed-allocation-item.available {
+            background: linear-gradient(135deg, #2ecc71, #27ae60);
+            color: white;
+            border-color: #27ae60;
+        }
+
+        .student-name {
+            font-weight: 600;
+            margin-top: 0.3rem;
+            font-size: 0.9rem;
+        }
+
+        .bed-location {
+            font-size: 0.8rem;
+            opacity: 0.9;
+            margin-top: 0.2rem;
+        }
+
+        /* Recent Activity */
+        .recent-activity {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            border: 1px solid #e0e0e0;
+        }
+
+        .recent-activity h3 {
+            color: #2c3e50;
+            margin-bottom: 1rem;
+        }
+
+        .activity-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .activity-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+
+        .activity-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #3498db;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+        }
+
+        .activity-content h4 {
+            margin: 0;
+            font-size: 1rem;
+            color: #2c3e50;
+        }
+
+        .activity-content p {
+            margin: 0.2rem 0 0 0;
+            color: #6c757d;
+            font-size: 0.9rem;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .admin-header {
+                flex-direction: column;
+                gap: 1rem;
+                text-align: center;
+            }
+
+            .admin-nav {
+                flex-wrap: wrap;
+            }
+
+            .nav-tab {
+                flex: 1;
+                min-width: 120px;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .room-management-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .reports-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .tab-actions {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+
+            .actions-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        .booking-step {
+            padding: 2rem;
+        }
+
+        .booking-step.hidden {
+            display: none;
+        }
+
+        .booking-step h3 {
+            color: #2c3e50;
+            margin-bottom: 1.5rem;
+            font-size: 1.5rem;
+        }
+
+        /* Firebase Auth Styles */
+        .auth-container {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 10000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .auth-modal {
+            background: white;
+            padding: 2rem;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            max-width: 400px;
+            width: 90%;
+        }
+
+        .auth-tabs {
+            display: flex;
+            margin-bottom: 1.5rem;
+            border-bottom: 2px solid #e0e0e0;
+        }
+
+        .auth-tab {
+            flex: 1;
+            padding: 1rem;
+            text-align: center;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s ease;
+        }
+
+        .auth-tab.active {
+            border-bottom-color: #3498db;
+            color: #3498db;
+            font-weight: 600;
+        }
+
+        .auth-form {
+            display: none;
+        }
+
+        .auth-form.active {
+            display: block;
+        }
+
+        .auth-form input {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 1rem;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+        }
+
+        .auth-form input:focus {
+            border-color: #3498db;
+            outline: none;
+        }
+
+        .auth-btn {
+            width: 100%;
+            padding: 12px;
+            background: #3498db;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+
+        .auth-btn:hover {
+            background: #2980b9;
+        }
+
+        .auth-error {
+            color: #e74c3c;
+            margin-top: 0.5rem;
+            font-size: 0.9rem;
+        }
+
+        .auth-success {
+            color: #27ae60;
+            margin-top: 0.5rem;
+            font-size: 0.9rem;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 1rem;
+        }
+
+        .loading.show {
+            display: block;
+        }
+
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #3498db;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* User info styles */
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-left: auto;
+        }
+
+        .user-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: #3498db;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+        }
+
+        .logout-btn {
+            background: none;
+            border: none;
+            color: #e74c3c;
+            cursor: pointer;
+            font-size: 0.9rem;
+            padding: 0.5rem;
+            border-radius: 5px;
+            transition: background 0.3s ease;
+        }
+
+        .logout-btn:hover {
+            background: rgba(231, 76, 60, 0.1);
+        }
+    </style>
+</head>
+<body>
+    <!-- Firebase Auth Container -->
+    <div id="authContainer" class="auth-container">
+        <div class="auth-modal">
+            <div class="auth-tabs">
+                <div class="auth-tab active" onclick="showAuthTab('login')">Login</div>
+                <div class="auth-tab" onclick="showAuthTab('register')">Register</div>
+            </div>
+            
+            <div id="loginForm" class="auth-form active">
+                <input type="email" id="loginEmail" placeholder="Email" required>
+                <input type="password" id="loginPassword" placeholder="Password" required>
+                <button class="auth-btn" onclick="loginUser()">Login</button>
+                <div id="loginError" class="auth-error"></div>
+            </div>
+            
+            <div id="registerForm" class="auth-form">
+                <input type="text" id="registerName" placeholder="Full Name" required>
+                <input type="email" id="registerEmail" placeholder="Email" required>
+                <input type="password" id="registerPassword" placeholder="Password (min 6 characters)" required>
+                <button class="auth-btn" onclick="registerUser()">Register</button>
+                <div id="registerError" class="auth-error"></div>
+            </div>
+            
+            <div id="authLoading" class="loading">
+                <div class="spinner"></div>
+                <p>Processing...</p>
+            </div>
+        </div>
+    </div>
+
+    <header>
+        <div class="container">
+            <div class="header-content">
+                <a href="#" class="logo">Dei-Gratcia <span>Hostel</span></a>
+                <div class="nav-buttons">
+                    <div id="userInfo" class="user-info" style="display: none;">
+                        <div class="user-avatar" id="userAvatar">A</div>
+                        <span id="userName">Admin</span>
+                        <button class="logout-btn" onclick="logoutUser()">
+                            <i class="fas fa-sign-out-alt"></i> Logout
+                        </button>
+                    </div>
+                    <button id="adminLoginBtn" class="btn btn-secondary" onclick="showAuthModal()">Admin Login</button>
+                    <button class="btn btn-primary" onclick="openBookingModal()">Book Now</button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <div class="container">
+            <div class="hero">
+                <h1>Welcome to Dei-Gratcia Hostel</h1>
+                <p class="hero-location">📍 Abeka-Ghana</p>
+                <p>Your home away from home. Comfortable, affordable, and convenient student accommodation.</p>
+                <button class="btn btn-primary" onclick="openBookingModal()">Book Your Room Today</button>
+            </div>
+        </div>
+    </main>
+
+    <!-- Enhanced Admin Panel -->
+    <section id="adminPanel" class="admin-panel hidden">
+        <!-- Admin Header -->
+        <div class="admin-header">
+            <div class="admin-header-left">
+        <h2 class="section-title">Admin Dashboard</h2>
+                <p class="admin-subtitle">Manage bookings, rooms, and users</p>
+            </div>
+            <div class="admin-header-right">
+                <button class="btn btn-secondary" onclick="showAdminSettings()">
+                    <i class="fas fa-cog"></i> Settings
+                </button>
+                <button class="btn btn-danger" onclick="logoutAdmin()">
+                    <i class="fas fa-sign-out-alt"></i> Logout
+                </button>
+            </div>
+        </div>
+
+        <!-- Admin Navigation -->
+        <div class="admin-nav">
+            <button class="nav-tab active" onclick="showAdminTab('dashboard')">
+                <i class="fas fa-tachometer-alt"></i> Dashboard
+            </button>
+            <button class="nav-tab" onclick="showAdminTab('bookings')">
+                <i class="fas fa-calendar-check"></i> Bookings
+            </button>
+            <button class="nav-tab" onclick="showAdminTab('rooms')">
+                <i class="fas fa-bed"></i> Room Management
+            </button>
+            <button class="nav-tab" onclick="showAdminTab('users')">
+                <i class="fas fa-users"></i> User Management
+            </button>
+            <button class="nav-tab" onclick="showAdminTab('reports')">
+                <i class="fas fa-chart-bar"></i> Reports
+            </button>
+        </div>
+
+        <!-- Dashboard Tab -->
+        <div id="dashboardTab" class="admin-tab active">
+            <!-- Statistics Cards -->
+            <div class="stats-grid">
+            <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-calendar-alt"></i>
+                    </div>
+                    <div class="stat-content">
+                <h3 id="totalBookings">0</h3>
+                <p>Total Bookings</p>
+                        <span class="stat-change positive">+12% this month</span>
+                    </div>
+            </div>
+            <div class="stat-card">
+                    <div class="stat-icon pending">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                    <div class="stat-content">
+                <h3 id="pendingBookings">0</h3>
+                <p>Pending</p>
+                        <span class="stat-change">Awaiting approval</span>
+                    </div>
+            </div>
+            <div class="stat-card">
+                    <div class="stat-icon confirmed">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                    <div class="stat-content">
+                <h3 id="confirmedBookings">0</h3>
+                <p>Confirmed</p>
+                        <span class="stat-change positive">+8% this week</span>
+                    </div>
+            </div>
+            <div class="stat-card">
+                    <div class="stat-icon revenue">
+                        <i class="fas fa-money-bill-wave"></i>
+                    </div>
+                    <div class="stat-content">
+                <h3 id="totalRevenue">GHS 0</h3>
+                <p>Total Revenue</p>
+                        <span class="stat-change positive">+15% this month</span>
+                    </div>
+            </div>
+        </div>
+        
+            <!-- Quick Actions -->
+            <div class="quick-actions">
+                <h3>Quick Actions</h3>
+                <div class="actions-grid">
+                    <button class="action-card" onclick="showAdminTab('bookings')">
+                        <i class="fas fa-plus"></i>
+                        <span>New Booking</span>
+                    </button>
+                    <button class="action-card" onclick="showAdminTab('rooms')">
+                        <i class="fas fa-bed"></i>
+                        <span>Manage Rooms</span>
+                    </button>
+                    <button class="action-card" onclick="showAdminTab('users')">
+                        <i class="fas fa-user-plus"></i>
+                        <span>Add User</span>
+                    </button>
+                    <button class="action-card" onclick="generateReport()">
+                        <i class="fas fa-download"></i>
+                        <span>Export Report</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Room Status Overview -->
+            <div class="room-overview">
+                <h3>Room Status Overview</h3>
+        <div class="room-status-grid" id="roomStatusGrid">
+            <!-- Room status will be populated here -->
+                </div>
+        </div>
+        
+            <!-- Recent Activity -->
+            <div class="recent-activity">
+                <h3>Recent Activity</h3>
+                <div class="activity-list" id="activityList">
+                    <!-- Activity items will be populated here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Bookings Tab -->
+        <div id="bookingsTab" class="admin-tab">
+            <div class="tab-header">
+                <h3>Booking Management</h3>
+                <div class="tab-actions">
+                    <input type="text" id="bookingSearch" placeholder="Search bookings..." class="search-input">
+                    <select id="statusFilter" class="filter-select">
+                        <option value="">All Status</option>
+                        <option value="pending">Pending</option>
+                        <option value="confirmed">Confirmed</option>
+                        <option value="paid">Paid</option>
+                        <option value="cancelled">Cancelled</option>
+                    </select>
+                    <button class="btn btn-primary" onclick="exportBookings()">
+                        <i class="fas fa-download"></i> Export
+                    </button>
+                </div>
+            </div>
+            
+            <div class="bookings-table-container">
+        <table class="bookings-table">
+            <thead>
+                <tr>
+                            <th>Student Name</th>
+                    <th>Index Number</th>
+                    <th>Institution</th>
+                    <th>Room Type</th>
+                    <th>Bed Number</th>
+                    <th>Amount</th>
+                    <th>Status</th>
+                    <th>Date</th>
+                            <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="bookingsTableBody">
+                <!-- Bookings will be populated here -->
+            </tbody>
+        </table>
+            </div>
+        </div>
+
+        <!-- Room Management Tab -->
+        <div id="roomsTab" class="admin-tab">
+            <div class="tab-header">
+                <h3>Room Management</h3>
+                <button class="btn btn-primary" onclick="showAddRoomModal()">
+                    <i class="fas fa-plus"></i> Add New Room
+                </button>
+            </div>
+            
+            <div class="room-management-grid">
+                <div class="room-config-card">
+                    <h4>Room Configuration</h4>
+                    <div class="room-config-list" id="roomConfigList">
+                        <!-- Room configurations will be populated here -->
+                    </div>
+                </div>
+                
+                <div class="room-availability-card">
+                    <h4>Current Availability</h4>
+                    <div class="availability-chart" id="availabilityChart">
+                        <!-- Availability chart will be populated here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- User Management Tab -->
+        <div id="usersTab" class="admin-tab">
+            <div class="tab-header">
+                <h3>User Management</h3>
+                <button class="btn btn-primary" onclick="showAddUserModal()">
+                    <i class="fas fa-user-plus"></i> Add New User
+                </button>
+            </div>
+            
+            <div class="users-table-container">
+                <table class="users-table">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Role</th>
+                            <th>Status</th>
+                            <th>Last Login</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="usersTableBody">
+                        <!-- Users will be populated here -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Reports Tab -->
+        <div id="reportsTab" class="admin-tab">
+            <div class="tab-header">
+                <h3>Reports & Analytics</h3>
+                <div class="report-actions">
+                    <select id="reportType" class="filter-select">
+                        <option value="booking">Booking Report</option>
+                        <option value="revenue">Revenue Report</option>
+                        <option value="occupancy">Occupancy Report</option>
+                        <option value="user">User Activity Report</option>
+                    </select>
+                    <input type="date" id="reportStartDate" class="date-input">
+                    <input type="date" id="reportEndDate" class="date-input">
+                    <button class="btn btn-primary" onclick="generateReport()">
+                        <i class="fas fa-chart-bar"></i> Generate Report
+                    </button>
+                </div>
+            </div>
+            
+            <div class="reports-grid">
+                <div class="report-card">
+                    <h4>Booking Trends</h4>
+                    <div class="chart-container" id="bookingChart">
+                        <!-- Chart will be populated here -->
+                    </div>
+                </div>
+                
+                <div class="report-card">
+                    <h4>Revenue Analysis</h4>
+                    <div class="chart-container" id="revenueChart">
+                        <!-- Chart will be populated here -->
+                    </div>
+                </div>
+                
+                <div class="report-card">
+                    <h4>Room Occupancy</h4>
+                    <div class="chart-container" id="occupancyChart">
+                        <!-- Chart will be populated here -->
+                    </div>
+                </div>
+                
+                <div class="report-card">
+                    <h4>Top Institutions</h4>
+                    <div class="chart-container" id="institutionChart">
+                        <!-- Chart will be populated here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Admin Settings Modal -->
+    <div id="adminSettingsModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeAdminSettings()">&times;</span>
+            <div class="modal-header">
+                <h2>Admin Settings</h2>
+            </div>
+            
+            <div class="settings-tabs">
+                <button class="settings-tab active" onclick="showSettingsTab('profile')">Profile</button>
+                <button class="settings-tab" onclick="showSettingsTab('security')">Security</button>
+                <button class="settings-tab" onclick="showSettingsTab('notifications')">Notifications</button>
+            </div>
+            
+            <div id="profileSettings" class="settings-content active">
+                <h3>Profile Information</h3>
+                <form id="adminProfileForm">
+                    <div class="form-group">
+                        <label for="adminName">Full Name</label>
+                        <input type="text" id="adminName" value="Admin User">
+                    </div>
+                    <div class="form-group">
+                        <label for="adminEmail">Email</label>
+                        <input type="email" id="adminEmail" value="admin@hostel.com">
+                    </div>
+                    <div class="form-group">
+                        <label for="adminPhone">Phone</label>
+                        <input type="tel" id="adminPhone" value="+233 123 456 789">
+                    </div>
+                    <button type="submit" class="btn btn-primary">Update Profile</button>
+                </form>
+            </div>
+            
+            <div id="securitySettings" class="settings-content">
+                <h3>Security Settings</h3>
+                <form id="adminSecurityForm">
+                    <div class="form-group">
+                        <label for="currentPassword">Current Password</label>
+                        <input type="password" id="currentPassword" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="newPassword">New Password</label>
+                        <input type="password" id="newPassword" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="confirmPassword">Confirm New Password</label>
+                        <input type="password" id="confirmPassword" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Change Password</button>
+                </form>
+            </div>
+            
+            <div id="notificationSettings" class="settings-content">
+                <h3>Notification Preferences</h3>
+                <div class="notification-options">
+                    <div class="notification-option">
+                        <input type="checkbox" id="emailNotifications" checked>
+                        <label for="emailNotifications">Email Notifications</label>
+                    </div>
+                    <div class="notification-option">
+                        <input type="checkbox" id="smsNotifications">
+                        <label for="smsNotifications">SMS Notifications</label>
+                    </div>
+                    <div class="notification-option">
+                        <input type="checkbox" id="bookingAlerts" checked>
+                        <label for="bookingAlerts">New Booking Alerts</label>
+                    </div>
+                    <div class="notification-option">
+                        <input type="checkbox" id="paymentAlerts" checked>
+                        <label for="paymentAlerts">Payment Alerts</label>
+                    </div>
+                </div>
+                <button class="btn btn-primary" onclick="saveNotificationSettings()">Save Preferences</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Room Modal -->
+    <div id="addRoomModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeAddRoomModal()">&times;</span>
+            <div class="modal-header">
+                <h2>Add New Room</h2>
+            </div>
+            
+            <form id="addRoomForm">
+                <div class="form-group">
+                    <label for="roomType">Room Type</label>
+                    <select id="roomType" required>
+                        <option value="">Select Room Type</option>
+                        <option value="6-person">6 in a Room</option>
+                        <option value="4-person">4 in a Room</option>
+                        <option value="3-person">3 in a Room</option>
+                        <option value="2-person">2 in a Room (Buy Your Own Light)</option>
+                        <option value="2-person-prepaid">2 in a Room (Prepaid Light)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="roomCount">Number of Rooms</label>
+                    <input type="number" id="roomCount" min="1" required>
+                </div>
+                <div class="form-group">
+                    <label for="bedsPerRoom">Beds per Room</label>
+                    <input type="number" id="bedsPerRoom" min="1" required>
+                </div>
+                <div class="form-group">
+                    <label for="roomPrice">Price per Bed</label>
+                    <input type="number" id="roomPrice" min="0" step="0.01" required>
+                </div>
+                <div class="form-group">
+                    <label for="roomDescription">Description</label>
+                    <textarea id="roomDescription" rows="3"></textarea>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeAddRoomModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Add Room</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Add User Modal -->
+    <div id="addUserModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeAddUserModal()">&times;</span>
+            <div class="modal-header">
+                <h2>Add New User</h2>
+            </div>
+            
+            <form id="addUserForm">
+                <div class="form-group">
+                    <label for="userName">Full Name</label>
+                    <input type="text" id="userName" required>
+                </div>
+                <div class="form-group">
+                    <label for="userEmail">Email</label>
+                    <input type="email" id="userEmail" required>
+                </div>
+                <div class="form-group">
+                    <label for="userRole">Role</label>
+                    <select id="userRole" required>
+                        <option value="">Select Role</option>
+                        <option value="admin">Administrator</option>
+                        <option value="manager">Manager</option>
+                        <option value="staff">Staff</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="userPassword">Password</label>
+                    <input type="password" id="userPassword" required>
+                </div>
+                <div class="form-group">
+                    <label for="userConfirmPassword">Confirm Password</label>
+                    <input type="password" id="userConfirmPassword" required>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeAddUserModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Add User</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Booking Modal -->
+    <div id="bookingModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeBookingModal()">&times;</span>
+            <div class="modal-header">
+                <h2>Student Booking Form</h2>
+                <p>Fill in your details to book a room</p>
+            </div>
+            
+            <!-- Step 1: Student Information -->
+            <div id="step1Content" class="booking-step">
+                <h3>Student Information</h3>
+                <form id="personalForm">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="firstName">First Name</label>
+                            <input type="text" id="firstName" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="lastName">Last Name</label>
+                            <input type="text" id="lastName" required>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="indexNumber">Index Number</label>
+                            <input type="text" id="indexNumber" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="phone">Phone Number</label>
+                            <input type="tel" id="phone" required>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="email">Email Address</label>
+                            <input type="email" id="email" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="institution">Institution</label>
+                            <input type="text" id="institution" required>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="program">Program of Study</label>
+                            <input type="text" id="program" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="level">Level/Year</label>
+                            <select id="level" required>
+                                <option value="">Select Level</option>
+                                <option value="100">Level 100</option>
+                                <option value="200">Level 200</option>
+                                <option value="300">Level 300</option>
+                                <option value="400">Level 400</option>
+                                <option value="500">Level 500</option>
+                                <option value="600">Level 600</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-row full">
+                        <div class="form-group">
+                            <label for="studentIdImage">Picture of Student ID</label>
+                            <input type="file" id="studentIdImage" accept="image/*" required>
+                            <small style="color: #7f8c8d;">Upload a clear picture of your student ID card</small>
+                        </div>
+                    </div>
+                    <div class="form-row full">
+                        <div class="form-group">
+                            <label for="checkInDate">Check-in Date</label>
+                            <input type="date" id="checkInDate" required>
+                        </div>
+                    </div>
+                    <div class="text-center">
+                        <button type="button" class="btn btn-primary" onclick="nextStep()">Next Step</button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Step 2: Room Selection -->
+            <div id="step2Content" class="booking-step hidden">
+                <h3>Select Your Room Type</h3>
+                <div class="rooms-grid">
+                    <div class="room-card" onclick="selectRoom('6-person', 2600)">
+                        <div class="room-type">6 in a Room</div>
+                        <div class="room-price">GHS 2,600</div>
+                        <div class="room-availability" id="availability-6-person">1 room available</div>
+                        <ul class="room-features">
+                            <li>Shared accommodation</li>
+                            <li>Basic amenities</li>
+                            <li>WiFi included</li>
+                            <li>Only 1 room available</li>
+                        </ul>
+                    </div>
+                    <div class="room-card" onclick="selectRoom('4-person', 2600)">
+                        <div class="room-type">4 in a Room</div>
+                        <div class="room-price">GHS 2,600</div>
+                        <div class="room-availability" id="availability-4-person">4 rooms available</div>
+                        <ul class="room-features">
+                            <li>Shared accommodation</li>
+                            <li>Basic amenities</li>
+                            <li>WiFi included</li>
+                            <li>4 rooms available</li>
+                        </ul>
+                    </div>
+                    <div class="room-card" onclick="selectRoom('3-person', 3000)">
+                        <div class="room-type">3 in a Room</div>
+                        <div class="room-price">GHS 3,000</div>
+                        <div class="room-availability" id="availability-3-person">1 room available</div>
+                        <ul class="room-features">
+                            <li>Less crowded</li>
+                            <li>More space</li>
+                            <li>WiFi included</li>
+                            <li>Only 1 room available</li>
+                        </ul>
+                    </div>
+                    <div class="room-card" onclick="selectRoom('2-person', 3400)">
+                        <div class="room-type">2 in a Room (Buy Your Own Light)</div>
+                        <div class="room-price">GHS 3,400</div>
+                        <div class="room-availability" id="availability-2-person">4 buildings available</div>
+                        <ul class="room-features">
+                            <li>Private space</li>
+                            <li>Premium amenities</li>
+                            <li>WiFi included</li>
+                            <li>4 buildings available</li>
+                        </ul>
+                    </div>
+                    <div class="room-card" onclick="selectRoom('2-person-prepaid', 3600)">
+                        <div class="room-type">2 in a Room (Prepaid Light)</div>
+                        <div class="room-price">GHS 3,600</div>
+                        <div class="room-availability" id="availability-2-person-prepaid">2 rooms available</div>
+                        <ul class="room-features">
+                            <li>Prepaid electricity</li>
+                            <li>Premium amenities</li>
+                            <li>WiFi included</li>
+                            <li>2 different rooms available</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="text-center">
+                    <button type="button" class="btn btn-secondary" onclick="prevStep()">Previous</button>
+                    <button class="btn btn-primary" onclick="nextStep()" id="nextBtn1" disabled>Next Step</button>
+                </div>
+            </div>
+
+            <!-- Step 3: Payment -->
+            <div id="step3Content" class="booking-step hidden">
+                <h3>Payment Information</h3>
+                <div id="paymentSummary" style="background: #f8f9fa; padding: 1.5rem; border-radius: 8px; margin-bottom: 2rem;">
+                    <!-- Payment summary will be populated here -->
+                </div>
+                
+                <div class="payment-container">
+                    <div class="payment-header">
+                        <h4>💳 MTN Mobile Money Payment</h4>
+                        <p>Complete your booking with secure mobile payment</p>
+                    </div>
+                    
+                    <div class="momo-card">
+                        <div class="momo-number">
+                            📱 Send payment to: <strong>0545326363</strong>
+                        </div>
+                        
+                        <div class="payment-instructions">
+                            <ol>
+                                <li>Open your MTN Mobile Money app</li>
+                                <li>Select "Send Money" or "Transfer"</li>
+                                <li>Enter the number: <strong>0545326363</strong></li>
+                                <li>Enter the amount: <strong id="paymentAmount">GHS 0</strong></li>
+                                <li>Add reference: <strong id="paymentReference">Your Name</strong></li>
+                                <li>Complete the transaction</li>
+                            </ol>
+                        </div>
+                    </div>
+                </div>
+                
+                                 <div class="proof-upload">
+                     <h4>📸 Submit Proof of Payment</h4>
+                     <p style="text-align: center; color: #7f8c8d; margin-bottom: 1.5rem;">
+                         Upload a screenshot of your payment confirmation
+                     </p>
+                     
+                     <div class="upload-area" onclick="document.getElementById('paymentProof').click()">
+                         <div class="upload-icon">📁</div>
+                         <div class="upload-text">Click to upload or drag & drop</div>
+                         <div class="upload-hint">PNG, JPG, JPEG up to 5MB</div>
+                         <input type="file" id="paymentProof" accept="image/*" style="display: none;" onchange="handlePaymentProofUpload(event)">
+                     </div>
+                     
+                     <div class="file-preview" id="filePreview">
+                         <img id="previewImage" src="" alt="Payment proof preview">
+                         <div class="file-info" id="fileInfo"></div>
+                     </div>
+                 </div>
+
+                 <!-- Bed Assignment Preview -->
+                 <div class="bed-assignment" id="bedAssignment" style="display: none;">
+                     <h4>🛏️ Your Bed Assignment</h4>
+                     <div class="bed-number" id="assignedBedNumber">Bed 1</div>
+                     <div class="room-assignment">
+                         <p><strong>Room Type:</strong> <span id="bedRoomType">4 in a Room</span></p>
+                         <p><strong>Available Beds:</strong></p>
+                         <div class="bed-status" id="bedStatus">
+                             <!-- Bed status will be populated here -->
+                         </div>
+                     </div>
+                 </div>
+                
+                <div class="text-center">
+                    <button type="button" class="btn btn-secondary" onclick="prevStep()">Previous</button>
+                    <button class="btn btn-primary" onclick="completeBooking()" id="completeBtn" disabled>Complete Booking</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Login Modal -->
+    <div id="loginModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeLoginModal()">&times;</span>
+            <div class="modal-header">
+                <h2>Admin Login</h2>
+                <p>Access the admin panel</p>
+            </div>
+            <div style="padding: 2rem;">
+                <form id="loginForm">
+                    <div class="form-group">
+                        <label for="username">Username</label>
+                        <input type="text" id="username" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="password">Password</label>
+                        <input type="password" id="password" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary" style="width: 100%;">Login</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global variables
+        let currentStep = 1;
+        let selectedRoom = null;
+        let bookings = [];
+
+        // Modal functions
+        function openLoginModal() {
+            document.getElementById('loginModal').style.display = 'block';
+        }
+
+        function closeLoginModal() {
+            document.getElementById('loginModal').style.display = 'none';
+        }
+
+        // Login form handler
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            
+            if (username === 'admin' && password === 'admin123') {
+                closeLoginModal();
+                showAdminPanel();
+                alert('Login successful!');
+            } else {
+                alert('Invalid credentials. Use admin/admin123');
+            }
+        });
+
+        function openBookingModal() {
+            document.getElementById('bookingModal').style.display = 'block';
+            currentStep = 1;
+            showCurrentStep();
+        }
+
+        function closeBookingModal() {
+            document.getElementById('bookingModal').style.display = 'none';
+            resetBookingForm();
+        }
+
+        // Close modal when clicking outside
+        window.onclick = function(event) {
+            if (event.target.classList.contains('modal')) {
+                event.target.style.display = 'none';
+            }
+        }
+
+        // Room selection
+        function selectRoom(type, price) {
+            // Check if room type is available
+            if (!isRoomTypeAvailable(type)) {
+                alert('Sorry, this room type is currently full. Please select another option.');
+                return;
+            }
+            
+            selectedRoom = { type, price };
+            
+            // Update visual selection
+            document.querySelectorAll('.room-card').forEach(card => {
+                card.classList.remove('selected');
+            });
+            event.target.closest('.room-card').classList.add('selected');
+            
+            // Enable next button
+            document.getElementById('nextBtn1').disabled = false;
+        }
+
+        // Update room availability display
+        async function updateRoomAvailabilityDisplay() {
+            try {
+                const bookings = await loadBookings();
+                Object.keys(roomAvailability).forEach(roomType => {
+                    const element = document.getElementById(`availability-${roomType}`);
+                    if (element) {
+                        const roomInfo = getRoomAvailabilityInfo(roomType);
+                        const existingBookings = bookings.filter(b => 
+                            b.roomType === roomType && b.status === 'paid'
+                        );
+                        const availableBeds = roomInfo.totalBeds - existingBookings.length;
+                        
+                        if (availableBeds <= 0) {
+                            element.textContent = 'FULL';
+                            element.style.background = 'rgba(231, 76, 60, 0.1)';
+                            element.style.color = '#e74c3c';
+                            element.closest('.room-card').style.opacity = '0.6';
+                            element.closest('.room-card').style.pointerEvents = 'none';
+                        } else {
+                            const roomTypeName = roomType === '2-person' ? 'buildings' : 
+                                               roomType === '2-person-prepaid' ? 'rooms' : 'rooms';
+                            element.textContent = `${availableBeds} ${roomTypeName} available`;
+                            element.style.background = 'rgba(52, 152, 219, 0.1)';
+                            element.style.color = '#3498db';
+                            element.closest('.room-card').style.opacity = '1';
+                            element.closest('.room-card').style.pointerEvents = 'auto';
+                        }
+                    }
+                });
+            } catch (error) {
+                console.error('Error updating room availability:', error);
+            }
+        }
+
+        // Navigation functions
+        function nextStep() {
+            if (currentStep === 1) {
+                // Validate student information form
+                const form = document.getElementById('personalForm');
+                if (!form.checkValidity()) {
+                    form.reportValidity();
+                    return;
+                }
+            }
+            
+            if (currentStep === 2 && !selectedRoom) {
+                alert('Please select a room type first.');
+                return;
+            }
+            
+            if (currentStep < 3) {
+                currentStep++;
+                showCurrentStep();
+            }
+        }
+
+        function prevStep() {
+            if (currentStep > 1) {
+                currentStep--;
+                showCurrentStep();
+            }
+        }
+
+        // Show current step
+        function showCurrentStep() {
+            // Hide all steps
+            document.querySelectorAll('.booking-step').forEach(step => {
+                step.classList.add('hidden');
+            });
+            
+            // Show current step
+            document.getElementById(`step${currentStep}Content`).classList.remove('hidden');
+            
+            // Update payment summary if on step 3
+            if (currentStep === 3) {
+                updatePaymentSummary();
+            }
+        }
+
+        // Update payment summary
+        function updatePaymentSummary() {
+            const firstName = document.getElementById('firstName').value;
+            const lastName = document.getElementById('lastName').value;
+            const indexNumber = document.getElementById('indexNumber').value;
+            const institution = document.getElementById('institution').value;
+            
+            const summary = `
+                <h4>Booking Summary</h4>
+                <p><strong>Name:</strong> ${firstName} ${lastName}</p>
+                <p><strong>Index Number:</strong> ${indexNumber}</p>
+                <p><strong>Institution:</strong> ${institution}</p>
+                <p><strong>Room Type:</strong> ${selectedRoom.type}</p>
+                <p><strong>Amount:</strong> GHS ${selectedRoom.price.toLocaleString()}</p>
+            `;
+            
+            document.getElementById('paymentSummary').innerHTML = summary;
+            
+            // Update payment instructions
+            document.getElementById('paymentAmount').textContent = `GHS ${selectedRoom.price.toLocaleString()}`;
+            document.getElementById('paymentReference').textContent = `${firstName} ${lastName}`;
+            
+            // Show bed assignment preview
+            showBedAssignment();
+        }
+
+        // Show bed assignment
+        function showBedAssignment() {
+            const bedNumber = getNextAvailableBed(selectedRoom.type);
+            const totalBeds = getTotalBedsForRoomType(selectedRoom.type);
+            
+            document.getElementById('assignedBedNumber').textContent = `Bed ${bedNumber}`;
+            document.getElementById('bedRoomType').textContent = selectedRoom.type;
+            
+            // Show bed status
+            const bedStatusHTML = generateBedStatusHTML(selectedRoom.type, bedNumber);
+            document.getElementById('bedStatus').innerHTML = bedStatusHTML;
+            
+            document.getElementById('bedAssignment').style.display = 'block';
+        }
+
+        // Room availability configuration
+        const roomAvailability = {
+            '6-person': { totalRooms: 1, bedsPerRoom: 6, totalBeds: 6 },
+            '4-person': { totalRooms: 4, bedsPerRoom: 4, totalBeds: 16 },
+            '3-person': { totalRooms: 1, bedsPerRoom: 3, totalBeds: 3 },
+            '2-person': { totalRooms: 4, bedsPerRoom: 2, totalBeds: 8 }, // 4 buildings
+            '2-person-prepaid': { totalRooms: 2, bedsPerRoom: 2, totalBeds: 4 } // 2 different rooms
+        };
+
+        // Get total beds for room type
+        function getTotalBedsForRoomType(roomType) {
+            return roomAvailability[roomType]?.totalBeds || 0;
+        }
+
+        // Get room availability info
+        function getRoomAvailabilityInfo(roomType) {
+            return roomAvailability[roomType] || { totalRooms: 0, bedsPerRoom: 0, totalBeds: 0 };
+        }
+
+        // Get next available bed number
+        function getNextAvailableBed(roomType) {
+            const roomInfo = getRoomAvailabilityInfo(roomType);
+            const existingBookings = bookings.filter(b => 
+                b.roomType === roomType && b.status === 'paid'
+            );
+            
+            // Count occupied beds
+            const occupiedBeds = existingBookings.length;
+            
+            // Check if room is full
+            if (occupiedBeds >= roomInfo.totalBeds) {
+                return null; // No beds available
+            }
+            
+            // Return next available bed number (1-based)
+            return occupiedBeds + 1;
+        }
+
+        // Check if room type is available
+        function isRoomTypeAvailable(roomType) {
+            const roomInfo = getRoomAvailabilityInfo(roomType);
+            const existingBookings = bookings.filter(b => 
+                b.roomType === roomType && b.status === 'paid'
+            );
+            
+            return existingBookings.length < roomInfo.totalBeds;
+        }
+
+        // Generate bed status HTML
+        function generateBedStatusHTML(roomType, assignedBed) {
+            const roomInfo = getRoomAvailabilityInfo(roomType);
+            const existingBookings = bookings.filter(b => 
+                b.roomType === roomType && b.status === 'paid'
+            );
+            
+            let html = '';
+            for (let i = 1; i <= roomInfo.totalBeds; i++) {
+                const isOccupied = i <= existingBookings.length;
+                const isAssigned = i === assignedBed;
+                const status = isOccupied ? 'Occupied' : 'Available';
+                const className = isOccupied ? 'occupied' : 'available';
+                
+                // Determine room/building number
+                let locationText = '';
+                if (roomType === '2-person') {
+                    const buildingNumber = Math.ceil(i / roomInfo.bedsPerRoom);
+                    locationText = `Building ${buildingNumber}`;
+                } else if (roomType === '2-person-prepaid') {
+                    const roomNumber = Math.ceil(i / roomInfo.bedsPerRoom);
+                    locationText = `Room ${roomNumber}`;
+                } else {
+                    locationText = `Room 1`;
+                }
+                
+                html += `
+                    <div class="bed-item ${className}">
+                        <div class="bed-item-number">Bed ${i}</div>
+                        <div class="bed-item-status">${status}</div>
+                        <div class="bed-item-location">${locationText}</div>
+                        ${isAssigned ? '<div style="font-size: 0.8rem; margin-top: 0.5rem; font-weight: bold; color: #f39c12;">YOUR BED</div>' : ''}
+                    </div>
+                `;
+            }
+            return html;
+        }
+
+        // Handle payment proof upload
+        function handlePaymentProofUpload(event) {
+            const file = event.target.files[0];
+            if (file) {
+                // Validate file type
+                if (!file.type.startsWith('image/')) {
+                    alert('Please upload an image file (PNG, JPG, JPEG)');
+                    return;
+                }
+                
+                // Validate file size (5MB limit)
+                if (file.size > 5 * 1024 * 1024) {
+                    alert('File size must be less than 5MB');
+                    return;
+                }
+                
+                // Preview the image
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('previewImage').src = e.target.result;
+                    document.getElementById('fileInfo').textContent = `${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MB)`;
+                    document.getElementById('filePreview').style.display = 'block';
+                    
+                    // Enable complete button
+                    document.getElementById('completeBtn').disabled = false;
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        // Drag and drop functionality
+        function setupDragAndDrop() {
+            const uploadArea = document.querySelector('.upload-area');
+            
+            uploadArea.addEventListener('dragover', function(e) {
+                e.preventDefault();
+                uploadArea.classList.add('dragover');
+            });
+            
+            uploadArea.addEventListener('dragleave', function(e) {
+                e.preventDefault();
+                uploadArea.classList.remove('dragover');
+            });
+            
+            uploadArea.addEventListener('drop', function(e) {
+                e.preventDefault();
+                uploadArea.classList.remove('dragover');
+                
+                const files = e.dataTransfer.files;
+                if (files.length > 0) {
+                    document.getElementById('paymentProof').files = files;
+                    handlePaymentProofUpload({ target: { files: files } });
+                }
+            });
+        }
+
+        // Complete booking
+        async function completeBooking() {
+            const paymentProof = document.getElementById('paymentProof').files[0];
+            
+            if (!paymentProof) {
+                alert('Please upload proof of payment before completing the booking.');
+                return;
+            }
+            
+            const assignedBed = getNextAvailableBed(selectedRoom.type);
+            
+            const booking = {
+                firstName: document.getElementById('firstName').value,
+                lastName: document.getElementById('lastName').value,
+                indexNumber: document.getElementById('indexNumber').value,
+                email: document.getElementById('email').value,
+                phone: document.getElementById('phone').value,
+                institution: document.getElementById('institution').value,
+                program: document.getElementById('program').value,
+                level: document.getElementById('level').value,
+                studentIdImage: document.getElementById('studentIdImage').files[0]?.name || 'No file uploaded',
+                checkInDate: document.getElementById('checkInDate').value,
+                roomType: selectedRoom.type,
+                bedNumber: assignedBed,
+                amount: selectedRoom.price,
+                paymentProof: paymentProof.name,
+                status: 'pending',
+                date: new Date().toLocaleDateString()
+            };
+            
+            try {
+                await saveBooking(booking);
+                
+                // Update availability display
+                updateRoomAvailabilityDisplay();
+            
+            alert(`Booking completed successfully! You have been assigned Bed ${assignedBed} in the ${selectedRoom.type} room. Your payment proof has been submitted. We will verify and confirm your booking shortly.`);
+            closeBookingModal();
+            } catch (error) {
+                console.error('Error saving booking:', error);
+                alert('Error saving booking. Please try again.');
+            }
+        }
+
+        // Reset booking form
+        function resetBookingForm() {
+            currentStep = 1;
+            selectedRoom = null;
+            showCurrentStep();
+            
+            // Reset form
+            document.getElementById('personalForm').reset();
+            
+            // Reset room selections
+            document.querySelectorAll('.room-card').forEach(card => {
+                card.classList.remove('selected');
+            });
+            
+            // Disable next button
+            document.getElementById('nextBtn1').disabled = true;
+        }
+
+        // Admin panel functions
+        function showAdminPanel() {
+            document.getElementById('adminPanel').classList.remove('hidden');
+            updateDashboard();
+        }
+
+        function hideAdminPanel() {
+            document.getElementById('adminPanel').classList.add('hidden');
+        }
+
+        async function updateAdminPanel() {
+            try {
+                const bookings = await loadBookings();
+            const total = bookings.length;
+            const pending = bookings.filter(b => b.status === 'pending').length;
+            const confirmed = bookings.filter(b => b.status === 'confirmed').length;
+            const revenue = bookings.filter(b => b.status === 'paid').reduce((sum, b) => sum + b.amount, 0);
+            
+            document.getElementById('totalBookings').textContent = total;
+            document.getElementById('pendingBookings').textContent = pending;
+            document.getElementById('confirmedBookings').textContent = confirmed;
+            document.getElementById('totalRevenue').textContent = `GHS ${revenue.toLocaleString()}`;
+            
+                updateRoomStatus(bookings);
+                updateBookingsTable(bookings);
+                
+                // Add activity log for admin login
+                addActivityLog('Admin logged in', 'Admin panel accessed', 'sign-in-alt');
+            } catch (error) {
+                console.error('Error updating admin panel:', error);
+            }
+        }
+
+        function updateRoomStatus(bookings = []) {
+            const roomTypes = ['6-person', '4-person', '3-person', '2-person', '2-person-prepaid'];
+            let html = '';
+            
+            roomTypes.forEach(roomType => {
+                const roomInfo = getRoomAvailabilityInfo(roomType);
+                const paidBookings = bookings.filter(b => b.roomType === roomType && b.status === 'paid');
+                const occupiedBeds = paidBookings.length;
+                
+                // Get room type display name
+                const displayNames = {
+                    '6-person': '6 in a Room',
+                    '4-person': '4 in a Room',
+                    '3-person': '3 in a Room',
+                    '2-person': '2 in a Room (Buy Your Own Light)',
+                    '2-person-prepaid': '2 in a Room (Prepaid Light)'
+                };
+                
+                html += `
+                    <div class="room-status-card">
+                        <h4>${displayNames[roomType]}</h4>
+                        <p>${occupiedBeds}/${roomInfo.totalBeds} beds occupied (${roomInfo.totalRooms} ${roomType === '2-person' ? 'buildings' : 'rooms'})</p>
+                        <div class="room-beds">
+                `;
+                
+                for (let i = 1; i <= roomInfo.totalBeds; i++) {
+                    const isOccupied = i <= occupiedBeds;
+                    const className = isOccupied ? 'occupied' : 'available';
+                    const status = isOccupied ? 'Occupied' : 'Available';
+                    
+                    // Find the student assigned to this bed
+                    let studentName = '';
+                    if (isOccupied) {
+                        const bookingForThisBed = paidBookings.find(b => b.bedNumber === i);
+                        if (bookingForThisBed) {
+                            studentName = `${bookingForThisBed.firstName} ${bookingForThisBed.lastName}`;
+                        }
+                    }
+                    
+                    // Determine location
+                    let locationText = '';
+                    if (roomType === '2-person') {
+                        const buildingNumber = Math.ceil(i / roomInfo.bedsPerRoom);
+                        locationText = `Building ${buildingNumber}`;
+                    } else if (roomType === '2-person-prepaid') {
+                        const roomNumber = Math.ceil(i / roomInfo.bedsPerRoom);
+                        locationText = `Room ${roomNumber}`;
+                    } else {
+                        locationText = `Room 1`;
+                    }
+                    
+                    html += `
+                        <div class="room-bed ${className}">
+                            Bed ${i}<br>
+                            <small>${status}</small><br>
+                            <small style="font-size: 0.7rem;">${locationText}</small>
+                            ${studentName ? `<br><small style="font-size: 0.7rem; color: #2c3e50; font-weight: 600;">${studentName}</small>` : ''}
+                        </div>
+                    `;
+                }
+                
+                html += `
+                        </div>
+                    </div>
+                `;
+            });
+            
+            document.getElementById('roomStatusGrid').innerHTML = html;
+        }
+
+        function updateBookingsTable(bookings = []) {
+            const tbody = document.getElementById('bookingsTableBody');
+            tbody.innerHTML = '';
+            
+            const bookingsToShow = bookings;
+            
+            bookingsToShow.forEach(booking => {
+                // Get bed location information
+                let bedLocation = '';
+                if (booking.bedNumber) {
+                    const roomInfo = getRoomAvailabilityInfo(booking.roomType);
+                    if (booking.roomType === '2-person') {
+                        const buildingNumber = Math.ceil(booking.bedNumber / roomInfo.bedsPerRoom);
+                        bedLocation = `Building ${buildingNumber}, Bed ${booking.bedNumber}`;
+                    } else if (booking.roomType === '2-person-prepaid') {
+                        const roomNumber = Math.ceil(booking.bedNumber / roomInfo.bedsPerRoom);
+                        bedLocation = `Room ${roomNumber}, Bed ${booking.bedNumber}`;
+                    } else {
+                        bedLocation = `Room 1, Bed ${booking.bedNumber}`;
+                    }
+                }
+                
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td><strong>${booking.firstName} ${booking.lastName}</strong></td>
+                    <td>${booking.indexNumber}</td>
+                    <td>${booking.institution}</td>
+                    <td>${booking.roomType}</td>
+                    <td>${booking.bedNumber ? bedLocation : 'Not assigned'}</td>
+                    <td>GHS ${booking.amount.toLocaleString()}</td>
+                    <td><span class="status-badge status-${booking.status}">${booking.status}</span></td>
+                    <td>${booking.date}</td>
+                    <td>
+                        ${booking.status === 'pending' ? `
+                            <button class="btn btn-primary" onclick="updateBookingStatus(${booking.id}, 'confirmed')" style="padding: 5px 10px; font-size: 0.8rem;">Confirm</button>
+                        ` : ''}
+                        ${booking.status === 'confirmed' ? `
+                            <button class="btn btn-primary" onclick="updateBookingStatus(${booking.id}, 'paid')" style="padding: 5px 10px; font-size: 0.8rem;">Mark Paid</button>
+                        ` : ''}
+                        ${booking.status === 'paid' ? `
+                            <button class="btn btn-secondary" onclick="viewBookingDetails(${booking.id})" style="padding: 5px 10px; font-size: 0.8rem;">View Details</button>
+                        ` : ''}
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        async function updateBookingStatus(bookingId, newStatus) {
+            try {
+                await updateBookingStatusInFirebase(bookingId, newStatus);
+                updateAdminPanel();
+                updateRoomAvailabilityDisplay();
+                addActivityLog(`Booking status updated to ${newStatus} for booking ID: ${bookingId}`);
+            } catch (error) {
+                console.error('Error updating booking status:', error);
+                alert('Error updating booking status. Please try again.');
+            }
+        }
+
+        function viewBookingDetails(bookingId) {
+            const booking = bookings.find(b => b.id === bookingId);
+            if (booking) {
+                // Get bed location information
+                let bedLocation = '';
+                if (booking.bedNumber) {
+                    const roomInfo = getRoomAvailabilityInfo(booking.roomType);
+                    if (booking.roomType === '2-person') {
+                        const buildingNumber = Math.ceil(booking.bedNumber / roomInfo.bedsPerRoom);
+                        bedLocation = `Building ${buildingNumber}, Bed ${booking.bedNumber}`;
+                    } else if (booking.roomType === '2-person-prepaid') {
+                        const roomNumber = Math.ceil(booking.bedNumber / roomInfo.bedsPerRoom);
+                        bedLocation = `Room ${roomNumber}, Bed ${booking.bedNumber}`;
+                    } else {
+                        bedLocation = `Room 1, Bed ${booking.bedNumber}`;
+                    }
+                }
+
+                const details = `
+                    <h3>Booking Details</h3>
+                    <div class="booking-details-grid">
+                        <div class="detail-item">
+                            <strong>Student Name:</strong> ${booking.firstName} ${booking.lastName}
+                        </div>
+                        <div class="detail-item">
+                            <strong>Index Number:</strong> ${booking.indexNumber}
+                        </div>
+                        <div class="detail-item">
+                            <strong>Institution:</strong> ${booking.institution}
+                        </div>
+                        <div class="detail-item">
+                            <strong>Program:</strong> ${booking.program}
+                        </div>
+                        <div class="detail-item">
+                            <strong>Level:</strong> ${booking.level}
+                        </div>
+                        <div class="detail-item">
+                            <strong>Email:</strong> ${booking.email}
+                        </div>
+                        <div class="detail-item">
+                            <strong>Phone:</strong> ${booking.phone}
+                        </div>
+                        <div class="detail-item">
+                            <strong>Room Type:</strong> ${booking.roomType}
+                        </div>
+                        <div class="detail-item">
+                            <strong>Bed Assignment:</strong> ${bedLocation}
+                        </div>
+                        <div class="detail-item">
+                            <strong>Amount:</strong> GHS ${booking.amount.toLocaleString()}
+                        </div>
+                        <div class="detail-item">
+                            <strong>Status:</strong> <span class="status-badge status-${booking.status}">${booking.status}</span>
+                        </div>
+                        <div class="detail-item">
+                            <strong>Check-in Date:</strong> ${booking.checkInDate}
+                        </div>
+                        <div class="detail-item">
+                            <strong>Booking Date:</strong> ${booking.date}
+                        </div>
+                    </div>
+                `;
+                
+                alert(details.replace(/<[^>]*>/g, '')); // Simple alert for now, could be enhanced with a modal
+            }
+        }
+
+        // Enhanced Admin Panel Functions
+        function showAdminTab(tabName) {
+            // Hide all tabs
+            document.querySelectorAll('.admin-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Remove active class from all nav tabs
+            document.querySelectorAll('.nav-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Show selected tab
+            document.getElementById(tabName + 'Tab').classList.add('active');
+            
+            // Add active class to clicked nav tab
+            event.target.classList.add('active');
+            
+            // Update content based on tab
+            switch(tabName) {
+                case 'dashboard':
+                    updateDashboard();
+                    break;
+                case 'bookings':
+                    updateBookingsTab();
+                    break;
+                case 'rooms':
+                    updateRoomsTab();
+                    break;
+                case 'users':
+                    updateUsersTab();
+                    break;
+                case 'reports':
+                    updateReportsTab();
+                    break;
+            }
+        }
+
+        function updateDashboard() {
+            updateAdminPanel();
+            updateRecentActivity();
+        }
+
+        function updateRecentActivity() {
+            const activityList = document.getElementById('activityList');
+            const activities = JSON.parse(localStorage.getItem('activities') || '[]');
+            
+            let html = '';
+            activities.slice(0, 5).forEach(activity => {
+                html += `
+                    <div class="activity-item">
+                        <div class="activity-icon">
+                            <i class="fas fa-${activity.icon}"></i>
+                        </div>
+                        <div class="activity-content">
+                            <h4>${activity.title}</h4>
+                            <p>${activity.description} - ${activity.time}</p>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            if (activities.length === 0) {
+                html = '<p style="text-align: center; color: #6c757d;">No recent activity</p>';
+            }
+            
+            activityList.innerHTML = html;
+        }
+
+        function addActivityLog(title, description = '', icon = 'info-circle') {
+            const activities = JSON.parse(localStorage.getItem('activities') || '[]');
+            activities.unshift({
+                title,
+                description,
+                icon,
+                time: new Date().toLocaleString()
+            });
+            
+            // Keep only last 50 activities
+            if (activities.length > 50) {
+                activities.splice(50);
+            }
+            
+            localStorage.setItem('activities', JSON.stringify(activities));
+        }
+
+        async function updateBookingsTab() {
+            try {
+                const bookings = await loadBookings();
+                console.log('Loaded bookings:', bookings); // Debug log
+                updateBookingsTable(bookings);
+                setupBookingSearch();
+            } catch (error) {
+                console.error('Error updating bookings tab:', error);
+            }
+        }
+
+        function setupBookingSearch() {
+            const searchInput = document.getElementById('bookingSearch');
+            const statusFilter = document.getElementById('statusFilter');
+            
+            searchInput.addEventListener('input', filterBookings);
+            statusFilter.addEventListener('change', filterBookings);
+        }
+
+        async function filterBookings() {
+            try {
+                const searchTerm = document.getElementById('bookingSearch').value.toLowerCase();
+                const statusFilter = document.getElementById('statusFilter').value;
+                
+                const allBookings = await loadBookings();
+                const filteredBookings = allBookings.filter(booking => {
+                    const matchesSearch = 
+                        booking.firstName.toLowerCase().includes(searchTerm) ||
+                        booking.lastName.toLowerCase().includes(searchTerm) ||
+                        booking.indexNumber.toLowerCase().includes(searchTerm) ||
+                        booking.institution.toLowerCase().includes(searchTerm);
+                    
+                    const matchesStatus = !statusFilter || booking.status === statusFilter;
+                    
+                    return matchesSearch && matchesStatus;
+                });
+                
+                updateBookingsTable(filteredBookings);
+            } catch (error) {
+                console.error('Error filtering bookings:', error);
+            }
+        }
+
+        async function updateBookingsTable(bookings = []) {
+            const tbody = document.getElementById('bookingsTableBody');
+            const bookingsToShow = bookings;
+            
+            tbody.innerHTML = '';
+            
+            bookingsToShow.forEach(booking => {
+                const row = document.createElement('tr');
+                // Get bed location information
+                let bedLocation = '';
+                if (booking.bedNumber) {
+                    const roomInfo = getRoomAvailabilityInfo(booking.roomType);
+                    if (booking.roomType === '2-person') {
+                        const buildingNumber = Math.ceil(booking.bedNumber / roomInfo.bedsPerRoom);
+                        bedLocation = `Building ${buildingNumber}, Bed ${booking.bedNumber}`;
+                    } else if (booking.roomType === '2-person-prepaid') {
+                        const roomNumber = Math.ceil(booking.bedNumber / roomInfo.bedsPerRoom);
+                        bedLocation = `Room ${roomNumber}, Bed ${booking.bedNumber}`;
+                    } else {
+                        bedLocation = `Room 1, Bed ${booking.bedNumber}`;
+                    }
+                }
+
+                row.innerHTML = `
+                    <td><strong>${booking.firstName} ${booking.lastName}</strong></td>
+                    <td>${booking.indexNumber}</td>
+                    <td>${booking.institution}</td>
+                    <td>${getRoomTypeDisplayName(booking.roomType)}</td>
+                    <td>${booking.bedNumber ? bedLocation : 'Not assigned'}</td>
+                    <td>GHS ${booking.amount.toLocaleString()}</td>
+                    <td><span class="status-badge status-${booking.status}">${booking.status}</span></td>
+                    <td>${booking.date}</td>
+                    <td>
+                        <div class="booking-actions">
+                            ${booking.status === 'pending' ? `
+                                <button class="btn btn-primary btn-sm" onclick="updateBookingStatus('${booking.id}', 'confirmed')">
+                                    <i class="fas fa-check"></i> Confirm
+                                </button>
+                            ` : ''}
+                            ${booking.status === 'confirmed' ? `
+                                <button class="btn btn-success btn-sm" onclick="updateBookingStatus('${booking.id}', 'paid')">
+                                    <i class="fas fa-money-bill"></i> Mark Paid
+                                </button>
+                            ` : ''}
+                            <button class="btn btn-info btn-sm" onclick="viewBookingDetails('${booking.id}')">
+                                <i class="fas fa-eye"></i> View
+                            </button>
+                            <button class="btn btn-danger btn-sm" onclick="deleteBooking('${booking.id}')">
+                                <i class="fas fa-trash"></i> Delete
+                            </button>
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        function getRoomTypeDisplayName(roomType) {
+            const displayNames = {
+                '6-person': '6 in a Room',
+                '4-person': '4 in a Room',
+                '3-person': '3 in a Room',
+                '2-person': '2 in a Room (Buy Your Own Light)',
+                '2-person-prepaid': '2 in a Room (Prepaid Light)'
+            };
+            return displayNames[roomType] || roomType;
+        }
+
+        async function viewBookingDetails(bookingId) {
+            try {
+                const bookings = await loadBookings();
+                const booking = bookings.find(b => b.id === bookingId);
+                if (booking) {
+                    // Get bed location information
+                    let bedLocation = '';
+                    if (booking.bedNumber) {
+                        const roomInfo = getRoomAvailabilityInfo(booking.roomType);
+                        if (booking.roomType === '2-person') {
+                            const buildingNumber = Math.ceil(booking.bedNumber / roomInfo.bedsPerRoom);
+                            bedLocation = `Building ${buildingNumber}, Bed ${booking.bedNumber}`;
+                        } else if (booking.roomType === '2-person-prepaid') {
+                            const roomNumber = Math.ceil(booking.bedNumber / roomInfo.bedsPerRoom);
+                            bedLocation = `Room ${roomNumber}, Bed ${booking.bedNumber}`;
+                        } else {
+                            bedLocation = `Room 1, Bed ${booking.bedNumber}`;
+                        }
+                    }
+
+                    const details = `
+                        <h3>Booking Details</h3>
+                        <div class="booking-details-grid">
+                            <div class="detail-item">
+                                <strong>Student Name:</strong> ${booking.firstName} ${booking.lastName}
+                            </div>
+                            <div class="detail-item">
+                                <strong>Index Number:</strong> ${booking.indexNumber}
+                            </div>
+                            <div class="detail-item">
+                                <strong>Institution:</strong> ${booking.institution}
+                            </div>
+                            <div class="detail-item">
+                                <strong>Program:</strong> ${booking.program}
+                            </div>
+                            <div class="detail-item">
+                                <strong>Level:</strong> ${booking.level}
+                            </div>
+                            <div class="detail-item">
+                                <strong>Email:</strong> ${booking.email}
+                            </div>
+                            <div class="detail-item">
+                                <strong>Phone:</strong> ${booking.phone}
+                            </div>
+                            <div class="detail-item">
+                                <strong>Room Type:</strong> ${booking.roomType}
+                            </div>
+                            <div class="detail-item">
+                                <strong>Bed Assignment:</strong> ${bedLocation}
+                            </div>
+                            <div class="detail-item">
+                                <strong>Amount:</strong> GHS ${booking.amount.toLocaleString()}
+                            </div>
+                            <div class="detail-item">
+                                <strong>Status:</strong> <span class="status-badge status-${booking.status}">${booking.status}</span>
+                            </div>
+                            <div class="detail-item">
+                                <strong>Check-in Date:</strong> ${booking.checkInDate}
+                            </div>
+                            <div class="detail-item">
+                                <strong>Booking Date:</strong> ${booking.date}
+                            </div>
+                        </div>
+                    `;
+                    
+                    alert(details.replace(/<[^>]*>/g, '')); // Simple alert for now, could be enhanced with a modal
+                }
+            } catch (error) {
+                console.error('Error viewing booking details:', error);
+                alert('Error loading booking details. Please try again.');
+            }
+        }
+
+        async function deleteBooking(bookingId) {
+            if (confirm('Are you sure you want to delete this booking?')) {
+                try {
+                    if (!db) {
+                        throw new Error('Firebase not initialized');
+                    }
+                    
+                    await db.collection('bookings').doc(bookingId).delete();
+                    updateAdminPanel();
+                    updateRoomAvailabilityDisplay();
+                    addActivityLog(`Booking deleted`, 'Booking removed from system', 'trash');
+                } catch (error) {
+                    console.error('Error deleting booking:', error);
+                    alert('Error deleting booking. Please try again.');
+                }
+            }
+        }
+
+        async function updateRoomsTab() {
+            try {
+                const bookings = await loadBookings();
+                updateRoomConfigList(bookings);
+                updateAvailabilityChart(bookings);
+            } catch (error) {
+                console.error('Error updating rooms tab:', error);
+            }
+        }
+
+        function updateRoomConfigList(bookings = []) {
+            const roomConfigList = document.getElementById('roomConfigList');
+            let html = '';
+            
+            Object.entries(roomAvailability).forEach(([roomType, config]) => {
+                const displayName = getRoomTypeDisplayName(roomType);
+                const occupiedBeds = bookings.filter(b => b.roomType === roomType && b.status === 'paid').length;
+                const occupancyRate = ((occupiedBeds / config.totalBeds) * 100).toFixed(1);
+                
+                html += `
+                    <div style="background: #f8f9fa; padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
+                        <h5 style="margin: 0 0 0.5rem 0; color: #2c3e50;">${displayName}</h5>
+                        <p style="margin: 0.2rem 0; color: #6c757d;">
+                            <strong>Total Rooms:</strong> ${config.totalRooms} ${roomType === '2-person' ? 'buildings' : 'rooms'}<br>
+                            <strong>Beds per Room:</strong> ${config.bedsPerRoom}<br>
+                            <strong>Total Beds:</strong> ${config.totalBeds}<br>
+                            <strong>Occupied:</strong> ${occupiedBeds}/${config.totalBeds} (${occupancyRate}%)
+                        </p>
+                        <div style="margin-top: 0.5rem;">
+                            <button class="btn btn-secondary" onclick="editRoomConfig('${roomType}')" style="padding: 3px 8px; font-size: 0.8rem;">Edit</button>
+                            <button class="btn btn-danger" onclick="deleteRoomConfig('${roomType}')" style="padding: 3px 8px; font-size: 0.8rem;">Delete</button>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            roomConfigList.innerHTML = html;
+        }
+
+        function updateAvailabilityChart(bookings = []) {
+            const availabilityChart = document.getElementById('availabilityChart');
+            let html = '<div style="text-align: center; padding: 2rem;">';
+            
+            Object.entries(roomAvailability).forEach(([roomType, config]) => {
+                const paidBookings = bookings.filter(b => b.roomType === roomType && b.status === 'paid');
+                const occupiedBeds = paidBookings.length;
+                const availableBeds = config.totalBeds - occupiedBeds;
+                const occupancyRate = ((occupiedBeds / config.totalBeds) * 100).toFixed(1);
+                
+                html += `
+                    <div style="margin-bottom: 2rem; text-align: left;">
+                        <h5 style="margin: 0 0 0.5rem 0; color: #2c3e50;">${getRoomTypeDisplayName(roomType)}</h5>
+                        <div style="background: #e0e0e0; border-radius: 10px; height: 20px; overflow: hidden; margin-bottom: 0.5rem;">
+                            <div style="background: ${occupiedBeds > 0 ? '#e74c3c' : '#2ecc71'}; height: 100%; width: ${occupancyRate}%; transition: width 0.3s ease;"></div>
+                        </div>
+                        <p style="margin: 0.5rem 0 0.5rem 0; font-size: 0.9rem; color: #6c757d;">
+                            ${occupiedBeds} occupied / ${availableBeds} available (${occupancyRate}%)
+                        </p>
+                        
+                        <!-- Bed Allocation Details -->
+                        <div style="background: #f8f9fa; padding: 1rem; border-radius: 8px; margin-top: 1rem;">
+                            <h6 style="margin: 0 0 0.5rem 0; color: #2c3e50;">Bed Allocation Details:</h6>
+                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 0.5rem;">
+                `;
+                
+                // Show all beds with student names
+                for (let i = 1; i <= config.totalBeds; i++) {
+                    const bookingForThisBed = paidBookings.find(b => b.bedNumber === i);
+                    const isOccupied = !!bookingForThisBed;
+                    
+                    // Determine location
+                    let locationText = '';
+                    if (roomType === '2-person') {
+                        const buildingNumber = Math.ceil(i / config.bedsPerRoom);
+                        locationText = `Building ${buildingNumber}`;
+                    } else if (roomType === '2-person-prepaid') {
+                        const roomNumber = Math.ceil(i / config.bedsPerRoom);
+                        locationText = `Room ${roomNumber}`;
+                    } else {
+                        locationText = `Room 1`;
+                    }
+                    
+                    html += `
+                        <div style="background: ${isOccupied ? '#e74c3c' : '#2ecc71'}; color: white; padding: 0.5rem; border-radius: 6px; font-size: 0.8rem;">
+                            <strong>Bed ${i}</strong><br>
+                            <small>${locationText}</small><br>
+                            <small>${isOccupied ? bookingForThisBed.firstName + ' ' + bookingForThisBed.lastName : 'Available'}</small>
+                        </div>
+                    `;
+                }
+                
+                html += `
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            html += '</div>';
+            availabilityChart.innerHTML = html;
+        }
+
+        function updateUsersTab() {
+            updateUsersTable();
+        }
+
+        function updateUsersTable() {
+            const users = JSON.parse(localStorage.getItem('users') || '[]');
+            const tbody = document.getElementById('usersTableBody');
+            
+            tbody.innerHTML = '';
+            
+            users.forEach(user => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${user.name}</td>
+                    <td>${user.email}</td>
+                    <td><span class="status-badge status-${user.role}">${user.role}</span></td>
+                    <td><span class="status-badge status-${user.status}">${user.status}</span></td>
+                    <td>${user.lastLogin || 'Never'}</td>
+                    <td>
+                        <div style="display: flex; gap: 0.5rem;">
+                            <button class="btn btn-secondary" onclick="editUser(${user.id})" style="padding: 5px 10px; font-size: 0.8rem;">Edit</button>
+                            <button class="btn btn-danger" onclick="deleteUser(${user.id})" style="padding: 5px 10px; font-size: 0.8rem;">Delete</button>
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        function updateReportsTab() {
+            updateBookingChart();
+            updateRevenueChart();
+            updateOccupancyChart();
+            updateInstitutionChart();
+        }
+
+        function updateBookingChart() {
+            const bookingChart = document.getElementById('bookingChart');
+            const monthlyBookings = getMonthlyBookings();
+            
+            let html = '<div style="text-align: center; padding: 1rem;">';
+            html += '<h5 style="margin-bottom: 1rem;">Monthly Bookings</h5>';
+            
+            monthlyBookings.forEach(month => {
+                const height = (month.count / Math.max(...monthlyBookings.map(m => m.count))) * 200;
+                html += `
+                    <div style="display: inline-block; margin: 0 0.5rem; text-align: center;">
+                        <div style="background: #3498db; width: 30px; height: ${height}px; border-radius: 3px 3px 0 0;"></div>
+                        <div style="font-size: 0.8rem; margin-top: 0.5rem;">${month.month}</div>
+                        <div style="font-size: 0.7rem; color: #6c757d;">${month.count}</div>
+                    </div>
+                `;
+            });
+            
+            html += '</div>';
+            bookingChart.innerHTML = html;
+        }
+
+        function getMonthlyBookings() {
+            const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+            const monthlyData = months.map(month => ({ month, count: 0 }));
+            
+            bookings.forEach(booking => {
+                const date = new Date(booking.date);
+                const monthIndex = date.getMonth();
+                monthlyData[monthIndex].count++;
+            });
+            
+            return monthlyData;
+        }
+
+        function updateRevenueChart() {
+            const revenueChart = document.getElementById('revenueChart');
+            const monthlyRevenue = getMonthlyRevenue();
+            
+            let html = '<div style="text-align: center; padding: 1rem;">';
+            html += '<h5 style="margin-bottom: 1rem;">Monthly Revenue</h5>';
+            
+            monthlyRevenue.forEach(month => {
+                const maxRevenue = Math.max(...monthlyRevenue.map(m => m.revenue));
+                const height = maxRevenue > 0 ? (month.revenue / maxRevenue) * 200 : 0;
+                html += `
+                    <div style="display: inline-block; margin: 0 0.5rem; text-align: center;">
+                        <div style="background: #27ae60; width: 30px; height: ${height}px; border-radius: 3px 3px 0 0;"></div>
+                        <div style="font-size: 0.8rem; margin-top: 0.5rem;">${month.month}</div>
+                        <div style="font-size: 0.7rem; color: #6c757d;">GHS ${month.revenue.toLocaleString()}</div>
+                    </div>
+                `;
+            });
+            
+            html += '</div>';
+            revenueChart.innerHTML = html;
+        }
+
+        function getMonthlyRevenue() {
+            const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+            const monthlyData = months.map(month => ({ month, revenue: 0 }));
+            
+            bookings.filter(b => b.status === 'paid').forEach(booking => {
+                const date = new Date(booking.date);
+                const monthIndex = date.getMonth();
+                monthlyData[monthIndex].revenue += booking.amount;
+            });
+            
+            return monthlyData;
+        }
+
+        function updateOccupancyChart() {
+            const occupancyChart = document.getElementById('occupancyChart');
+            let html = '<div style="text-align: center; padding: 1rem;">';
+            html += '<h5 style="margin-bottom: 1rem;">Room Occupancy</h5>';
+            
+            Object.entries(roomAvailability).forEach(([roomType, config]) => {
+                const occupiedBeds = bookings.filter(b => b.roomType === roomType && b.status === 'paid').length;
+                const occupancyRate = ((occupiedBeds / config.totalBeds) * 100).toFixed(1);
+                
+                html += `
+                    <div style="margin-bottom: 1rem;">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                            <span style="font-size: 0.9rem;">${getRoomTypeDisplayName(roomType)}</span>
+                            <span style="font-size: 0.9rem; font-weight: bold;">${occupancyRate}%</span>
+                        </div>
+                        <div style="background: #e0e0e0; border-radius: 10px; height: 15px; overflow: hidden;">
+                            <div style="background: #3498db; height: 100%; width: ${occupancyRate}%; transition: width 0.3s ease;"></div>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            html += '</div>';
+            occupancyChart.innerHTML = html;
+        }
+
+        function updateInstitutionChart() {
+            const institutionChart = document.getElementById('institutionChart');
+            const institutionStats = getInstitutionStats();
+            
+            let html = '<div style="text-align: center; padding: 1rem;">';
+            html += '<h5 style="margin-bottom: 1rem;">Top Institutions</h5>';
+            
+            institutionStats.slice(0, 5).forEach(institution => {
+                html += `
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; padding: 0.5rem; background: #f8f9fa; border-radius: 5px;">
+                        <span style="font-size: 0.9rem;">${institution.name}</span>
+                        <span style="font-size: 0.9rem; font-weight: bold; color: #3498db;">${institution.count}</span>
+                    </div>
+                `;
+            });
+            
+            html += '</div>';
+            institutionChart.innerHTML = html;
+        }
+
+        function getInstitutionStats() {
+            const stats = {};
+            
+            bookings.forEach(booking => {
+                if (stats[booking.institution]) {
+                    stats[booking.institution]++;
+                } else {
+                    stats[booking.institution] = 1;
+                }
+            });
+            
+            return Object.entries(stats).map(([name, count]) => ({ name, count })).sort((a, b) => b.count - a.count);
+        }
+
+        // Modal Functions
+        function showAdminSettings() {
+            document.getElementById('adminSettingsModal').style.display = 'block';
+        }
+
+        function closeAdminSettings() {
+            document.getElementById('adminSettingsModal').style.display = 'none';
+        }
+
+        function showSettingsTab(tabName) {
+            document.querySelectorAll('.settings-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            
+            document.querySelectorAll('.settings-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            document.getElementById(tabName + 'Settings').classList.add('active');
+            event.target.classList.add('active');
+        }
+
+        function showAddRoomModal() {
+            document.getElementById('addRoomModal').style.display = 'block';
+        }
+
+        function closeAddRoomModal() {
+            document.getElementById('addRoomModal').style.display = 'none';
+            document.getElementById('addRoomForm').reset();
+        }
+
+        function showAddUserModal() {
+            document.getElementById('addUserModal').style.display = 'block';
+        }
+
+        function closeAddUserModal() {
+            document.getElementById('addUserModal').style.display = 'none';
+            document.getElementById('addUserForm').reset();
+        }
+
+        function logoutAdmin() {
+            if (confirm('Are you sure you want to logout?')) {
+                document.getElementById('adminPanel').classList.add('hidden');
+                addActivityLog('Admin logged out', 'User logged out of admin panel', 'sign-out-alt');
+            }
+        }
+
+        function exportBookings() {
+            const csvContent = generateBookingsCSV();
+            const blob = new Blob([csvContent], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `bookings_${new Date().toISOString().split('T')[0]}.csv`;
+            a.click();
+            window.URL.revokeObjectURL(url);
+            addActivityLog('Bookings exported', 'CSV file downloaded', 'download');
+        }
+
+        function generateBookingsCSV() {
+            const headers = ['Name', 'Index Number', 'Email', 'Phone', 'Institution', 'Program', 'Level', 'Room Type', 'Bed Number', 'Amount', 'Status', 'Date'];
+            const rows = bookings.map(booking => [
+                `${booking.firstName} ${booking.lastName}`,
+                booking.indexNumber,
+                booking.email,
+                booking.phone,
+                booking.institution,
+                booking.program,
+                booking.level,
+                getRoomTypeDisplayName(booking.roomType),
+                booking.bedNumber || 'Not assigned',
+                booking.amount,
+                booking.status,
+                booking.date
+            ]);
+            
+            return [headers, ...rows].map(row => row.join(',')).join('\n');
+        }
+
+        function generateReport() {
+            const reportType = document.getElementById('reportType').value;
+            const startDate = document.getElementById('reportStartDate').value;
+            const endDate = document.getElementById('reportEndDate').value;
+            
+            alert(`Generating ${reportType} report from ${startDate} to ${endDate}...\n\nThis feature would generate a detailed report based on the selected criteria.`);
+            addActivityLog(`${reportType} report generated`, `Report created for ${startDate} to ${endDate}`, 'chart-bar');
+        }
+
+        // Form Handlers
+        document.addEventListener('DOMContentLoaded', function() {
+            // Add form event listeners
+            document.getElementById('addRoomForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                addNewRoom();
+            });
+            
+            document.getElementById('addUserForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                addNewUser();
+            });
+            
+            document.getElementById('adminProfileForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                updateAdminProfile();
+            });
+            
+            document.getElementById('adminSecurityForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                changeAdminPassword();
+            });
+        });
+
+        function addNewRoom() {
+            const roomType = document.getElementById('roomType').value;
+            const roomCount = parseInt(document.getElementById('roomCount').value);
+            const bedsPerRoom = parseInt(document.getElementById('bedsPerRoom').value);
+            const roomPrice = parseFloat(document.getElementById('roomPrice').value);
+            const description = document.getElementById('roomDescription').value;
+            
+            if (roomType && roomCount && bedsPerRoom && roomPrice) {
+                roomAvailability[roomType] = {
+                    totalRooms: roomCount,
+                    bedsPerRoom: bedsPerRoom,
+                    totalBeds: roomCount * bedsPerRoom
+                };
+                
+                localStorage.setItem('roomAvailability', JSON.stringify(roomAvailability));
+                closeAddRoomModal();
+                updateRoomsTab();
+                addActivityLog(`New room type added: ${roomType}`, `${roomCount} rooms with ${bedsPerRoom} beds each`, 'bed');
+            }
+        }
+
+        function addNewUser() {
+            const name = document.getElementById('userName').value;
+            const email = document.getElementById('userEmail').value;
+            const role = document.getElementById('userRole').value;
+            const password = document.getElementById('userPassword').value;
+            const confirmPassword = document.getElementById('userConfirmPassword').value;
+            
+            if (password !== confirmPassword) {
+                alert('Passwords do not match!');
+                return;
+            }
+            
+            const users = JSON.parse(localStorage.getItem('users') || '[]');
+            const newUser = {
+                id: Date.now(),
+                name,
+                email,
+                role,
+                status: 'active',
+                lastLogin: null,
+                password: btoa(password) // Simple encoding (not secure for production)
+            };
+            
+            users.push(newUser);
+            localStorage.setItem('users', JSON.stringify(users));
+            closeAddUserModal();
+            updateUsersTab();
+            addActivityLog(`New user added: ${name}`, `User created with ${role} role`, 'user-plus');
+        }
+
+        function updateAdminProfile() {
+            const name = document.getElementById('adminName').value;
+            const email = document.getElementById('adminEmail').value;
+            const phone = document.getElementById('adminPhone').value;
+            
+            localStorage.setItem('adminProfile', JSON.stringify({ name, email, phone }));
+            alert('Profile updated successfully!');
+            addActivityLog('Admin profile updated', 'Profile information modified', 'user-edit');
+        }
+
+        function changeAdminPassword() {
+            const currentPassword = document.getElementById('currentPassword').value;
+            const newPassword = document.getElementById('newPassword').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            
+            if (newPassword !== confirmPassword) {
+                alert('New passwords do not match!');
+                return;
+            }
+            
+            // In a real application, you would verify the current password
+            localStorage.setItem('adminPassword', btoa(newPassword));
+            alert('Password changed successfully!');
+            document.getElementById('adminSecurityForm').reset();
+            addActivityLog('Admin password changed', 'Password updated successfully', 'lock');
+        }
+
+        function saveNotificationSettings() {
+            const settings = {
+                email: document.getElementById('emailNotifications').checked,
+                sms: document.getElementById('smsNotifications').checked,
+                bookingAlerts: document.getElementById('bookingAlerts').checked,
+                paymentAlerts: document.getElementById('paymentAlerts').checked
+            };
+            
+            localStorage.setItem('notificationSettings', JSON.stringify(settings));
+            alert('Notification preferences saved!');
+            addActivityLog('Notification settings updated', 'Preferences modified', 'bell');
+        }
+
+        // Firebase Configuration
+        // Your web app's Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyBLc5pL5h51A1s3svqWSNUSnrGOFpJ4ZjY",
+            authDomain: "dei-gratcia-hoste.firebaseapp.com",
+            projectId: "dei-gratcia-hoste",
+            storageBucket: "dei-gratcia-hoste.firebasestorage.app",
+            messagingSenderId: "188803200749",
+            appId: "1:188803200749:web:07ccf2fd0d06d65bedbee4",
+            measurementId: "G-GZM8SQEVPL"
+        };
+
+        // Global Firebase variables
+        let auth, db;
+
+        // Initialize Firebase
+        function initializeFirebase() {
+            try {
+                firebase.initializeApp(firebaseConfig);
+                auth = firebase.auth();
+                db = firebase.firestore();
+
+                // Authentication State Observer
+                auth.onAuthStateChanged(function(user) {
+                    if (user) {
+                        // User is signed in
+                        showUserInfo(user);
+                        hideAuthModal();
+                        showAdminPanel();
+                    } else {
+                        // User is signed out
+                        hideUserInfo();
+                        hideAdminPanel();
+                        // Don't show auth modal automatically - let user click login button
+                    }
+                });
+            } catch (error) {
+                console.error('Firebase initialization error:', error);
+            }
+        }
+
+        // Auth Functions
+        function showAuthModal() {
+            document.getElementById('authContainer').style.display = 'flex';
+        }
+
+        function hideAuthModal() {
+            document.getElementById('authContainer').style.display = 'none';
+            clearAuthErrors();
+        }
+
+        function showAuthTab(tab) {
+            // Update tab buttons
+            document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            // Update forms
+            document.querySelectorAll('.auth-form').forEach(f => f.classList.remove('active'));
+            if (tab === 'login') {
+                document.getElementById('loginForm').classList.add('active');
+            } else {
+                document.getElementById('registerForm').classList.add('active');
+            }
+        }
+
+        function clearAuthErrors() {
+            document.getElementById('loginError').textContent = '';
+            document.getElementById('registerError').textContent = '';
+        }
+
+        function showLoading(show) {
+            document.getElementById('authLoading').classList.toggle('show', show);
+            document.querySelectorAll('.auth-form').forEach(f => f.style.display = show ? 'none' : 'block');
+        }
+
+        async function registerUser() {
+            if (!auth || !db) {
+                document.getElementById('registerError').textContent = 'Firebase not initialized. Please refresh the page.';
+                return;
+            }
+            
+            const name = document.getElementById('registerName').value;
+            const email = document.getElementById('registerEmail').value;
+            const password = document.getElementById('registerPassword').value;
+            
+            if (!name || !email || !password) {
+                document.getElementById('registerError').textContent = 'All fields are required';
+                return;
+            }
+            
+            if (password.length < 6) {
+                document.getElementById('registerError').textContent = 'Password must be at least 6 characters';
+                return;
+            }
+            
+            showLoading(true);
+            clearAuthErrors();
+            
+            try {
+                const userCredential = await auth.createUserWithEmailAndPassword(email, password);
+                const user = userCredential.user;
+                
+                // Save user profile
+                await user.updateProfile({
+                    displayName: name
+                });
+                
+                // Save user data to Firestore
+                await db.collection('users').doc(user.uid).set({
+                    name: name,
+                    email: email,
+                    role: 'admin',
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                
+                addActivityLog(`New admin registered: ${name}`, 'Admin account created', 'user-plus');
+                
+            } catch (error) {
+                document.getElementById('registerError').textContent = error.message;
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        async function loginUser() {
+            if (!auth) {
+                document.getElementById('loginError').textContent = 'Firebase not initialized. Please refresh the page.';
+                return;
+            }
+            
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+            
+            if (!email || !password) {
+                document.getElementById('loginError').textContent = 'Email and password are required';
+                return;
+            }
+            
+            showLoading(true);
+            clearAuthErrors();
+            
+            try {
+                await auth.signInWithEmailAndPassword(email, password);
+                addActivityLog('Admin login successful', 'User logged in', 'sign-in-alt');
+            } catch (error) {
+                document.getElementById('loginError').textContent = error.message;
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        async function logoutUser() {
+            if (!auth) {
+                console.error('Firebase not initialized');
+                return;
+            }
+            
+            try {
+                await auth.signOut();
+                addActivityLog('Admin logout', 'User logged out', 'sign-out-alt');
+            } catch (error) {
+                console.error('Logout error:', error);
+            }
+        }
+
+        function showUserInfo(user) {
+            const userInfo = document.getElementById('userInfo');
+            const adminLoginBtn = document.getElementById('adminLoginBtn');
+            const userAvatar = document.getElementById('userAvatar');
+            const userName = document.getElementById('userName');
+            
+            userInfo.style.display = 'flex';
+            adminLoginBtn.style.display = 'none';
+            
+            const name = user.displayName || user.email.split('@')[0];
+            userAvatar.textContent = name.charAt(0).toUpperCase();
+            userName.textContent = name;
+        }
+
+        function hideUserInfo() {
+            const userInfo = document.getElementById('userInfo');
+            const adminLoginBtn = document.getElementById('adminLoginBtn');
+            
+            userInfo.style.display = 'none';
+            adminLoginBtn.style.display = 'block';
+        }
+
+        // Database Functions
+        async function saveBooking(booking) {
+            if (!auth || !db) {
+                throw new Error('Firebase not initialized');
+            }
+            
+            try {
+                const user = auth.currentUser;
+                if (!user) throw new Error('User not authenticated');
+                
+                const bookingRef = await db.collection('bookings').add({
+                    ...booking,
+                    createdBy: user.uid,
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                
+                return bookingRef.id;
+            } catch (error) {
+                console.error('Error saving booking:', error);
+                throw error;
+            }
+        }
+
+        async function loadBookings() {
+            if (!auth || !db) {
+                console.error('Firebase not initialized');
+                return [];
+            }
+            
+            try {
+                const user = auth.currentUser;
+                if (!user) return [];
+                
+                const snapshot = await db.collection('bookings').get();
+                return snapshot.docs.map(doc => ({
+                    id: doc.id,
+                    ...doc.data()
+                }));
+            } catch (error) {
+                console.error('Error loading bookings:', error);
+                return [];
+            }
+        }
+
+        async function updateBookingStatusInFirebase(bookingId, status) {
+            if (!auth || !db) {
+                throw new Error('Firebase not initialized');
+            }
+            
+            try {
+                const user = auth.currentUser;
+                if (!user) throw new Error('User not authenticated');
+                
+                await db.collection('bookings').doc(bookingId).update({
+                    status: status,
+                    updatedBy: user.uid,
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                
+                addActivityLog(`Booking status updated to ${status}`, `Booking ID: ${bookingId}`, 'edit');
+            } catch (error) {
+                console.error('Error updating booking:', error);
+                throw error;
+            }
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', async function() {
+            // Initialize Firebase first
+            initializeFirebase();
+            
+            // Set minimum date for check-in to today
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('checkInDate').min = today;
+            
+            // Setup drag and drop for payment proof
+            setupDragAndDrop();
+            
+            // Update room availability display
+            await updateRoomAvailabilityDisplay();
+            
+            // Initialize admin panel if needed
+            if (document.getElementById('adminPanel').classList.contains('hidden') === false) {
+                await updateDashboard();
+            }
+        });
+
+        // Missing functions for room management
+        function editRoomConfig(roomType) {
+            alert(`Edit functionality for ${roomType} will be implemented soon.`);
+        }
+
+        function deleteRoomConfig(roomType) {
+            if (confirm(`Are you sure you want to delete the ${getRoomTypeDisplayName(roomType)} configuration?`)) {
+                alert(`Delete functionality for ${roomType} will be implemented soon.`);
+            }
+        }
+
+        // Missing functions for user management
+        function editUser(userId) {
+            alert(`Edit functionality for user ${userId} will be implemented soon.`);
+        }
+
+        function deleteUser(userId) {
+            if (confirm('Are you sure you want to delete this user?')) {
+                alert(`Delete functionality for user ${userId} will be implemented soon.`);
+            }
+        }
+
+        // Missing functions for reports
+        function generateReport() {
+            alert('Report generation will be implemented soon.');
+        }
+
+        // Missing functions for settings
+        function showAdminSettings() {
+            document.getElementById('adminSettingsModal').style.display = 'block';
+        }
+
+        function closeAdminSettings() {
+            document.getElementById('adminSettingsModal').style.display = 'none';
+        }
+
+        function showSettingsTab(tabName) {
+            // Hide all settings tabs
+            document.querySelectorAll('.settings-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Show selected tab
+            document.getElementById(tabName + 'SettingsTab').classList.add('active');
+        }
+
+        // Missing functions for modals
+        function showAddRoomModal() {
+            document.getElementById('addRoomModal').style.display = 'block';
+        }
+
+        function closeAddRoomModal() {
+            document.getElementById('addRoomModal').style.display = 'none';
+        }
+
+        function showAddUserModal() {
+            document.getElementById('addUserModal').style.display = 'block';
+        }
+
+        function closeAddUserModal() {
+            document.getElementById('addUserModal').style.display = 'none';
+        }
+
+        // Missing functions for tab navigation
+        function showAdminTab(tabName) {
+            // Hide all tabs
+            document.querySelectorAll('.admin-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Remove active class from all nav tabs
+            document.querySelectorAll('.nav-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Show selected tab
+            document.getElementById(tabName + 'Tab').classList.add('active');
+            
+            // Add active class to clicked nav tab
+            event.target.classList.add('active');
+            
+            // Update content based on tab
+            switch(tabName) {
+                case 'dashboard':
+                    updateDashboard();
+                    break;
+                case 'bookings':
+                    updateBookingsTab();
+                    break;
+                case 'rooms':
+                    updateRoomsTab();
+                    break;
+                case 'users':
+                    updateUsersTab();
+                    break;
+                case 'reports':
+                    updateReportsTab();
+                    break;
+            }
+        }
+
+        // Missing functions for user management
+        async function updateUsersTab() {
+            try {
+                const users = await loadUsers();
+                updateUsersTable(users);
+            } catch (error) {
+                console.error('Error updating users tab:', error);
+            }
+        }
+
+        async function loadUsers() {
+            if (!auth || !db) {
+                console.error('Firebase not initialized');
+                return [];
+            }
+            
+            try {
+                const user = auth.currentUser;
+                if (!user) return [];
+                
+                const snapshot = await db.collection('users').get();
+                return snapshot.docs.map(doc => ({
+                    id: doc.id,
+                    ...doc.data()
+                }));
+            } catch (error) {
+                console.error('Error loading users:', error);
+                return [];
+            }
+        }
+
+        function updateUsersTable(users = []) {
+            const tbody = document.getElementById('usersTableBody');
+            if (!tbody) return;
+            
+            tbody.innerHTML = '';
+            
+            users.forEach(user => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td><strong>${user.name}</strong></td>
+                    <td>${user.email}</td>
+                    <td><span class="status-badge status-${user.status || 'active'}">${user.status || 'active'}</span></td>
+                    <td>${user.role || 'admin'}</td>
+                    <td>${user.lastLogin || 'Never'}</td>
+                    <td>
+                        <div style="display: flex; gap: 0.5rem;">
+                            <button class="btn btn-secondary" onclick="editUser('${user.id}')" style="padding: 5px 10px; font-size: 0.8rem;">Edit</button>
+                            <button class="btn btn-danger" onclick="deleteUser('${user.id}')" style="padding: 5px 10px; font-size: 0.8rem;">Delete</button>
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        // Missing functions for reports
+        function updateReportsTab() {
+            // Placeholder for reports functionality
+            console.log('Reports tab updated');
+        }
+
+        // Missing functions for add room/user
+        function addNewRoom() {
+            const roomType = document.getElementById('newRoomType').value;
+            const roomCount = parseInt(document.getElementById('newRoomCount').value);
+            const bedsPerRoom = parseInt(document.getElementById('newBedsPerRoom').value);
+            
+            if (!roomType || !roomCount || !bedsPerRoom) {
+                alert('Please fill in all fields');
+                return;
+            }
+            
+            // Add to roomAvailability
+            roomAvailability[roomType] = {
+                totalRooms: roomCount,
+                bedsPerRoom: bedsPerRoom,
+                totalBeds: roomCount * bedsPerRoom
+            };
+            
+            closeAddRoomModal();
+            updateRoomsTab();
+            addActivityLog(`New room type added: ${roomType}`, `${roomCount} rooms with ${bedsPerRoom} beds each`, 'bed');
+        }
+
+        function addNewUser() {
+            const name = document.getElementById('userName').value;
+            const email = document.getElementById('userEmail').value;
+            const role = document.getElementById('userRole').value;
+            const password = document.getElementById('userPassword').value;
+            const confirmPassword = document.getElementById('userConfirmPassword').value;
+            
+            if (password !== confirmPassword) {
+                alert('Passwords do not match!');
+                return;
+            }
+            
+            // This would create a new user in Firebase Auth and Firestore
+            alert('User creation will be implemented soon.');
+            closeAddUserModal();
+        }
+
+        // Missing functions for admin profile
+        function updateAdminProfile() {
+            const name = document.getElementById('adminName').value;
+            const email = document.getElementById('adminEmail').value;
+            const phone = document.getElementById('adminPhone').value;
+            
+            alert('Profile update will be implemented soon.');
+        }
+
+        function changeAdminPassword() {
+            const currentPassword = document.getElementById('currentPassword').value;
+            const newPassword = document.getElementById('newPassword').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            
+            if (newPassword !== confirmPassword) {
+                alert('New passwords do not match!');
+                return;
+            }
+            
+            alert('Password change will be implemented soon.');
+        }
+
+        function saveNotificationSettings() {
+            alert('Notification settings will be implemented soon.');
+        }
+    </script>
+</body>
+</html> 

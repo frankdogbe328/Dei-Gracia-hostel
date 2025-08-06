@@ -1798,16 +1798,16 @@
             </div>
             
             <div id="loginForm" class="auth-form active">
-                <input type="email" id="loginEmail" placeholder="Email" required>
-                <input type="password" id="loginPassword" placeholder="Password" required>
+                <input type="email" id="loginEmail" name="loginEmail" placeholder="Email" autocomplete="email" required>
+                <input type="password" id="loginPassword" name="loginPassword" placeholder="Password" autocomplete="current-password" required>
                 <button class="auth-btn" onclick="loginUser()">Login</button>
                 <div id="loginError" class="auth-error"></div>
             </div>
             
             <div id="registerForm" class="auth-form">
-                <input type="text" id="registerName" placeholder="Full Name" required>
-                <input type="email" id="registerEmail" placeholder="Email" required>
-                <input type="password" id="registerPassword" placeholder="Password (min 6 characters)" required>
+                <input type="text" id="registerName" name="registerName" placeholder="Full Name" autocomplete="name" required>
+                <input type="email" id="registerEmail" name="registerEmail" placeholder="Email" autocomplete="email" required>
+                <input type="password" id="registerPassword" name="registerPassword" placeholder="Password (min 6 characters)" autocomplete="new-password" required>
                 <button class="auth-btn" onclick="registerUser()">Register</button>
                 <div id="registerError" class="auth-error"></div>
             </div>
@@ -2137,15 +2137,15 @@
                 <form id="adminProfileForm">
                     <div class="form-group">
                         <label for="adminName">Full Name</label>
-                        <input type="text" id="adminName" value="Admin User">
+                        <input type="text" id="adminName" name="adminName" value="Admin User" autocomplete="name">
                     </div>
                     <div class="form-group">
                         <label for="adminEmail">Email</label>
-                        <input type="email" id="adminEmail" value="admin@hostel.com">
+                        <input type="email" id="adminEmail" name="adminEmail" value="admin@hostel.com" autocomplete="email">
                     </div>
                     <div class="form-group">
                         <label for="adminPhone">Phone</label>
-                        <input type="tel" id="adminPhone" value="+233 123 456 789">
+                        <input type="tel" id="adminPhone" name="adminPhone" value="+233 123 456 789" autocomplete="tel">
                     </div>
                     <button type="submit" class="btn btn-primary">Update Profile</button>
                 </form>
@@ -2156,15 +2156,15 @@
                 <form id="adminSecurityForm">
                     <div class="form-group">
                         <label for="currentPassword">Current Password</label>
-                        <input type="password" id="currentPassword" required>
+                        <input type="password" id="currentPassword" name="currentPassword" autocomplete="current-password" required>
                     </div>
                     <div class="form-group">
                         <label for="newPassword">New Password</label>
-                        <input type="password" id="newPassword" required>
+                        <input type="password" id="newPassword" name="newPassword" autocomplete="new-password" required>
                     </div>
                     <div class="form-group">
                         <label for="confirmPassword">Confirm New Password</label>
-                        <input type="password" id="confirmPassword" required>
+                        <input type="password" id="confirmPassword" name="confirmPassword" autocomplete="new-password" required>
                     </div>
                     <button type="submit" class="btn btn-primary">Change Password</button>
                 </form>
@@ -2206,7 +2206,7 @@
             <form id="addRoomForm">
                 <div class="form-group">
                     <label for="roomType">Room Type</label>
-                    <select id="roomType" required>
+                    <select id="roomType" name="roomType" autocomplete="off" required>
                         <option value="">Select Room Type</option>
                         <option value="6-person">6 in a Room</option>
                         <option value="4-person">4 in a Room</option>
@@ -2217,15 +2217,15 @@
                 </div>
                 <div class="form-group">
                     <label for="roomCount">Number of Rooms</label>
-                    <input type="number" id="roomCount" min="1" required>
+                    <input type="number" id="roomCount" name="roomCount" min="1" autocomplete="off" required>
                 </div>
                 <div class="form-group">
                     <label for="bedsPerRoom">Beds per Room</label>
-                    <input type="number" id="bedsPerRoom" min="1" required>
+                    <input type="number" id="bedsPerRoom" name="bedsPerRoom" min="1" autocomplete="off" required>
                 </div>
                 <div class="form-group">
                     <label for="roomPrice">Price per Bed</label>
-                    <input type="number" id="roomPrice" min="0" step="0.01" required>
+                    <input type="number" id="roomPrice" name="roomPrice" min="0" step="0.01" autocomplete="off" required>
                 </div>
                 <div class="form-group">
                     <label for="roomDescription">Description</label>
@@ -2250,15 +2250,15 @@
             <form id="addUserForm">
                 <div class="form-group">
                     <label for="userName">Full Name</label>
-                    <input type="text" id="userName" required>
+                    <input type="text" id="userName" name="userName" autocomplete="name" required>
                 </div>
                 <div class="form-group">
                     <label for="userEmail">Email</label>
-                    <input type="email" id="userEmail" required>
+                    <input type="email" id="userEmail" name="userEmail" autocomplete="email" required>
                 </div>
                 <div class="form-group">
                     <label for="userRole">Role</label>
-                    <select id="userRole" required>
+                    <select id="userRole" name="userRole" autocomplete="off" required>
                         <option value="">Select Role</option>
                         <option value="admin">Administrator</option>
                         <option value="manager">Manager</option>
@@ -2267,11 +2267,11 @@
                 </div>
                 <div class="form-group">
                     <label for="userPassword">Password</label>
-                    <input type="password" id="userPassword" required>
+                    <input type="password" id="userPassword" name="userPassword" autocomplete="new-password" required>
                 </div>
                 <div class="form-group">
                     <label for="userConfirmPassword">Confirm Password</label>
-                    <input type="password" id="userConfirmPassword" required>
+                    <input type="password" id="userConfirmPassword" name="userConfirmPassword" autocomplete="new-password" required>
                 </div>
                 <div class="form-actions">
                     <button type="button" class="btn btn-secondary" onclick="closeAddUserModal()">Cancel</button>
@@ -2297,41 +2297,41 @@
                     <div class="form-row">
                         <div class="form-group">
                             <label for="firstName">First Name</label>
-                            <input type="text" id="firstName" required>
+                            <input type="text" id="firstName" name="firstName" autocomplete="given-name" required>
                         </div>
                         <div class="form-group">
                             <label for="lastName">Last Name</label>
-                            <input type="text" id="lastName" required>
+                            <input type="text" id="lastName" name="lastName" autocomplete="family-name" required>
                         </div>
                     </div>
                     <div class="form-row">
                         <div class="form-group">
                             <label for="indexNumber">Index Number</label>
-                            <input type="text" id="indexNumber" required>
+                            <input type="text" id="indexNumber" name="indexNumber" autocomplete="off" required>
                         </div>
                         <div class="form-group">
                             <label for="phone">Phone Number</label>
-                            <input type="tel" id="phone" required>
+                            <input type="tel" id="phone" name="phone" autocomplete="tel" required>
                         </div>
                     </div>
                     <div class="form-row">
                         <div class="form-group">
                             <label for="email">Email Address</label>
-                            <input type="email" id="email" required>
+                            <input type="email" id="email" name="email" autocomplete="email" required>
                         </div>
                         <div class="form-group">
                             <label for="institution">Institution</label>
-                            <input type="text" id="institution" required>
+                            <input type="text" id="institution" name="institution" autocomplete="organization" required>
                         </div>
                     </div>
                     <div class="form-row">
                         <div class="form-group">
                             <label for="program">Program of Study</label>
-                            <input type="text" id="program" required>
+                            <input type="text" id="program" name="program" autocomplete="off" required>
                         </div>
                         <div class="form-group">
                             <label for="level">Level/Year</label>
-                            <select id="level" required>
+                            <select id="level" name="level" autocomplete="off" required>
                                 <option value="">Select Level</option>
                                 <option value="100">Level 100</option>
                                 <option value="200">Level 200</option>
@@ -2345,14 +2345,14 @@
                     <div class="form-row full">
                         <div class="form-group">
                             <label for="studentIdImage">Picture of Student ID</label>
-                            <input type="file" id="studentIdImage" accept="image/*" required>
+                            <input type="file" id="studentIdImage" name="studentIdImage" accept="image/*" autocomplete="off" required>
                             <small style="color: #7f8c8d;">Upload a clear picture of your student ID card</small>
                         </div>
                     </div>
                     <div class="form-row full">
                         <div class="form-group">
                             <label for="checkInDate">Check-in Date</label>
-                            <input type="date" id="checkInDate" required>
+                            <input type="date" id="checkInDate" name="checkInDate" autocomplete="off" required>
                         </div>
                     </div>
                     <div class="text-center">
@@ -2522,11 +2522,11 @@
                 <form id="loginForm">
                     <div class="form-group">
                         <label for="username">Username</label>
-                        <input type="text" id="username" required>
+                        <input type="text" id="username" name="username" autocomplete="username" required>
                     </div>
                     <div class="form-group">
                         <label for="password">Password</label>
-                        <input type="password" id="password" required>
+                        <input type="password" id="password" name="password" autocomplete="current-password" required>
                     </div>
                     <button type="submit" class="btn btn-primary" style="width: 100%;">Login</button>
                 </form>

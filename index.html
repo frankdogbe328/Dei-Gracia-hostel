@@ -2532,7 +2532,7 @@
     </div>
 
     <script>
-        // COMPLETELY LOCAL STORAGE SYSTEM - NO FIREBASE
+        // COMPLETELY CLEAN LOCAL STORAGE SYSTEM - NO FIREBASE
         let currentStep = 1;
         let selectedRoom = null;
         let currentUser = null;
@@ -2716,24 +2716,26 @@
 
         function updateBookingsTable(bookings) {
             const tbody = document.getElementById('bookingsTableBody');
-            tbody.innerHTML = '';
-            
-            bookings.forEach(booking => {
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td>${booking.firstName} ${booking.lastName}</td>
-                    <td>${booking.roomType}</td>
-                    <td>GHS ${booking.amount}</td>
-                    <td>${booking.status}</td>
-                    <td>${booking.date}</td>
-                    <td>
-                        <button onclick="confirmBooking('${booking.bookingId}')" class="btn btn-sm btn-success">Confirm</button>
-                        <button onclick="viewBooking('${booking.bookingId}')" class="btn btn-sm btn-info">View</button>
-                        <button onclick="deleteBooking('${booking.bookingId}')" class="btn btn-sm btn-danger">Delete</button>
-                    </td>
-                `;
-                tbody.appendChild(row);
-            });
+            if (tbody) {
+                tbody.innerHTML = '';
+                
+                bookings.forEach(booking => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${booking.firstName} ${booking.lastName}</td>
+                        <td>${booking.roomType}</td>
+                        <td>GHS ${booking.amount}</td>
+                        <td>${booking.status}</td>
+                        <td>${booking.date}</td>
+                        <td>
+                            <button onclick="confirmBooking('${booking.bookingId}')" class="btn btn-sm btn-success">Confirm</button>
+                            <button onclick="viewBooking('${booking.bookingId}')" class="btn btn-sm btn-info">View</button>
+                            <button onclick="deleteBooking('${booking.bookingId}')" class="btn btn-sm btn-danger">Delete</button>
+                        </td>
+                    `;
+                    tbody.appendChild(row);
+                });
+            }
         }
 
         function confirmBooking(bookingId) {
@@ -2780,65 +2782,6 @@
             initializeLocalStorage();
             console.log('Hostel booking system loaded successfully!');
         });
-                
-                Object.keys(roomAvailability).forEach(roomType => {
-                    const element = document.getElementById(`availability-${roomType}`);
-                    if (element) {
-                        const roomInfo = getRoomAvailabilityInfo(roomType);
-                        const existingBookings = allBookings.filter(b => 
-                            b.roomType === roomType && (b.status === 'paid' || b.status === 'pending')
-                        );
-                        const availableBeds = roomInfo.totalBeds - existingBookings.length;
-                        
-                        if (availableBeds <= 0) {
-                            element.textContent = 'FULL';
-                            element.style.background = 'rgba(231, 76, 60, 0.1)';
-                            element.style.color = '#e74c3c';
-                            element.closest('.room-card').style.opacity = '0.6';
-                            element.closest('.room-card').style.pointerEvents = 'none';
-                        } else {
-                            const roomTypeName = roomType === '2-person' ? 'buildings' : 
-                                               roomType === '2-person-prepaid' ? 'rooms' : 'rooms';
-                            element.textContent = `${availableBeds} ${roomTypeName} available`;
-                            element.style.background = 'rgba(52, 152, 219, 0.1)';
-                            element.style.color = '#3498db';
-                            element.closest('.room-card').style.opacity = '1';
-                            element.closest('.room-card').style.pointerEvents = 'auto';
-                        }
-                    }
-                });
-            } catch (error) {
-                console.error('Error updating room availability:', error);
-                // Fallback to local storage only
-                const localBookings = JSON.parse(localStorage.getItem('allBookings') || '[]');
-                Object.keys(roomAvailability).forEach(roomType => {
-                    const element = document.getElementById(`availability-${roomType}`);
-                    if (element) {
-                        const roomInfo = getRoomAvailabilityInfo(roomType);
-                        const existingBookings = localBookings.filter(b => 
-                            b.roomType === roomType && (b.status === 'paid' || b.status === 'pending')
-                        );
-                        const availableBeds = roomInfo.totalBeds - existingBookings.length;
-                        
-                        if (availableBeds <= 0) {
-                            element.textContent = 'FULL';
-                            element.style.background = 'rgba(231, 76, 60, 0.1)';
-                            element.style.color = '#e74c3c';
-                            element.closest('.room-card').style.opacity = '0.6';
-                            element.closest('.room-card').style.pointerEvents = 'none';
-                        } else {
-                            const roomTypeName = roomType === '2-person' ? 'buildings' : 
-                                               roomType === '2-person-prepaid' ? 'rooms' : 'rooms';
-                            element.textContent = `${availableBeds} ${roomTypeName} available`;
-                            element.style.background = 'rgba(52, 152, 219, 0.1)';
-                            element.style.color = '#3498db';
-                            element.closest('.room-card').style.opacity = '1';
-                            element.closest('.room-card').style.pointerEvents = 'auto';
-                        }
-                    }
-                });
-            }
-        }
 
         // Navigation functions
         function nextStep() {

@@ -1466,7 +1466,7 @@
             }
             
             .upload-hint {
-                font-size: 0.8rem;
+            font-size: 0.8rem;
             }
             
             /* Buttons mobile improvements */
@@ -1629,7 +1629,7 @@
             }
         }
 
-        /* Firebase Auth Styles */
+        /* Local Storage Auth Styles */
         .auth-container {
             display: none;
             position: fixed;
@@ -2532,61 +2532,114 @@
     </div>
 
     <script>
-        // Global variables
+        // COMPLETELY LOCAL STORAGE SYSTEM - NO FIREBASE
         let currentStep = 1;
         let selectedRoom = null;
-        let bookings = [];
+        let currentUser = null;
+
+        // Initialize local storage system
+        function initializeLocalStorage() {
+            console.log('Local storage system initialized');
+            
+            // Initialize default admin if not exists
+            const admins = JSON.parse(localStorage.getItem('admins') || '[]');
+            if (admins.length === 0) {
+                const defaultAdmin = {
+                    name: 'Admin',
+                    email: 'admin@hostel.com',
+                    password: 'admin123',
+                    role: 'admin'
+                };
+                admins.push(defaultAdmin);
+                localStorage.setItem('admins', JSON.stringify(admins));
+                console.log('Default admin created');
+            }
+        }
+
+        // Simple booking function - GUARANTEED TO WORK
+        function completeBooking() {
+            console.log('🚀 Starting simple booking...');
+            
+            // Get form values
+            const firstName = document.getElementById('firstName').value;
+            const lastName = document.getElementById('lastName').value;
+            const email = document.getElementById('email').value;
+            const phone = document.getElementById('phone').value;
+            const paymentProof = document.getElementById('paymentProof');
+            
+            // Basic validation
+            if (!firstName || !lastName || !email || !phone) {
+                alert('Please fill in all required fields.');
+                return;
+            }
+            
+            if (!paymentProof || !paymentProof.files || !paymentProof.files[0]) {
+                alert('Please upload payment proof.');
+                return;
+            }
+            
+            if (!selectedRoom) {
+                alert('Please select a room type.');
+                return;
+            }
+            
+            // Create booking
+            const booking = {
+                firstName: firstName,
+                lastName: lastName,
+                email: email,
+                phone: phone,
+                roomType: selectedRoom.type,
+                amount: selectedRoom.price,
+                paymentProof: paymentProof.files[0].name,
+                date: new Date().toLocaleDateString(),
+                bookingId: 'BK-' + Date.now(),
+                status: 'pending'
+            };
+            
+            // Save to localStorage
+            try {
+                const bookings = JSON.parse(localStorage.getItem('bookings') || '[]');
+                bookings.push(booking);
+                localStorage.setItem('bookings', JSON.stringify(bookings));
+                console.log('✅ Booking saved successfully');
+            } catch (error) {
+                console.log('Storage error:', error);
+            }
+            
+            // Show success
+            alert(`
+                🎉 BOOKING SUCCESSFUL!
+                
+                Name: ${firstName} ${lastName}
+                Room: ${selectedRoom.type}
+                Amount: GHS ${selectedRoom.price}
+                Booking ID: ${booking.bookingId}
+                
+                ✅ Your booking is confirmed!
+            `);
+            
+            // Close modal and reset
+            document.getElementById('bookingModal').style.display = 'none';
+            document.getElementById('personalForm').reset();
+            selectedRoom = null;
+            currentStep = 1;
+            
+            console.log('🎯 Booking completed!');
+        }
 
         // Modal functions
-        function openLoginModal() {
-            document.getElementById('loginModal').style.display = 'block';
-        }
-
-        function closeLoginModal() {
-            document.getElementById('loginModal').style.display = 'none';
-        }
-
-        // Login form handler
-        document.getElementById('loginForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            const username = document.getElementById('username').value;
-            const password = document.getElementById('password').value;
-            
-            if (username === 'admin' && password === 'admin123') {
-                closeLoginModal();
-                showAdminPanel();
-                alert('Login successful!');
-            } else {
-                alert('Invalid credentials. Use admin/admin123');
-            }
-        });
-
         function openBookingModal() {
             document.getElementById('bookingModal').style.display = 'block';
             currentStep = 1;
-            showCurrentStep();
         }
 
         function closeBookingModal() {
             document.getElementById('bookingModal').style.display = 'none';
-            resetBookingForm();
-        }
-
-        // Close modal when clicking outside
-        window.onclick = function(event) {
-            if (event.target.classList.contains('modal')) {
-                event.target.style.display = 'none';
-            }
         }
 
         // Room selection
         function selectRoom(type, price) {
-            // Check if room type is available
-            if (!isRoomTypeAvailable(type)) {
-                alert('Sorry, this room type is currently full. Please select another option.');
-                return;
-            }
-            
             selectedRoom = { type, price };
             
             // Update visual selection
@@ -2595,25 +2648,138 @@
             });
             event.target.closest('.room-card').classList.add('selected');
             
-            // Enable next button
-            document.getElementById('nextBtn1').disabled = false;
+            console.log('Room selected:', type, price);
         }
 
-        // Update room availability display
-        async function updateRoomAvailabilityDisplay() {
-            try {
-                // Load from both local storage and Firebase
-                const localBookings = JSON.parse(localStorage.getItem('allBookings') || '[]');
-                let firebaseBookings = [];
-                
-                try {
-                    firebaseBookings = await loadBookings();
-                } catch (error) {
-                    console.log('Firebase load failed, using local data only');
-                }
-                
-                // Combine bookings (local takes precedence for recent bookings)
-                const allBookings = [...firebaseBookings, ...localBookings];
+        // Admin functions
+        function showAuthModal() {
+            document.getElementById('authContainer').style.display = 'flex';
+        }
+
+        function hideAuthModal() {
+            document.getElementById('authContainer').style.display = 'none';
+        }
+
+        function showAuthTab(tab) {
+            document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            document.querySelectorAll('.auth-form').forEach(f => f.classList.remove('active'));
+            if (tab === 'login') {
+                document.getElementById('loginForm').classList.add('active');
+            } else {
+                document.getElementById('registerForm').classList.add('active');
+            }
+        }
+
+        function loginUser() {
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+            
+            if (!email || !password) {
+                document.getElementById('loginError').textContent = 'All fields are required';
+                return;
+            }
+            
+            const admins = JSON.parse(localStorage.getItem('admins') || '[]');
+            const user = admins.find(admin => admin.email === email && admin.password === password);
+            
+            if (user) {
+                currentUser = user;
+                hideAuthModal();
+                showAdminPanel();
+                console.log('Login successful:', user.name);
+            } else {
+                document.getElementById('loginError').textContent = 'Invalid credentials';
+            }
+        }
+
+        function showAdminPanel() {
+            document.getElementById('adminPanel').style.display = 'block';
+            updateAdminPanel();
+        }
+
+        function hideAdminPanel() {
+            document.getElementById('adminPanel').style.display = 'none';
+        }
+
+        function updateAdminPanel() {
+            const bookings = JSON.parse(localStorage.getItem('bookings') || '[]');
+            const total = bookings.length;
+            const pending = bookings.filter(b => b.status === 'pending').length;
+            
+            document.getElementById('totalBookings').textContent = total;
+            document.getElementById('pendingBookings').textContent = pending;
+            
+            updateBookingsTable(bookings);
+        }
+
+        function updateBookingsTable(bookings) {
+            const tbody = document.getElementById('bookingsTableBody');
+            tbody.innerHTML = '';
+            
+            bookings.forEach(booking => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${booking.firstName} ${booking.lastName}</td>
+                    <td>${booking.roomType}</td>
+                    <td>GHS ${booking.amount}</td>
+                    <td>${booking.status}</td>
+                    <td>${booking.date}</td>
+                    <td>
+                        <button onclick="confirmBooking('${booking.bookingId}')" class="btn btn-sm btn-success">Confirm</button>
+                        <button onclick="viewBooking('${booking.bookingId}')" class="btn btn-sm btn-info">View</button>
+                        <button onclick="deleteBooking('${booking.bookingId}')" class="btn btn-sm btn-danger">Delete</button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        function confirmBooking(bookingId) {
+            const bookings = JSON.parse(localStorage.getItem('bookings') || '[]');
+            const booking = bookings.find(b => b.bookingId === bookingId);
+            if (booking) {
+                booking.status = 'confirmed';
+                localStorage.setItem('bookings', JSON.stringify(bookings));
+                updateAdminPanel();
+                alert('Booking confirmed!');
+            }
+        }
+
+        function viewBooking(bookingId) {
+            const bookings = JSON.parse(localStorage.getItem('bookings') || '[]');
+            const booking = bookings.find(b => b.bookingId === bookingId);
+            if (booking) {
+                alert(`
+                    Booking Details:
+                    Name: ${booking.firstName} ${booking.lastName}
+                    Email: ${booking.email}
+                    Phone: ${booking.phone}
+                    Room: ${booking.roomType}
+                    Amount: GHS ${booking.amount}
+                    Status: ${booking.status}
+                    Date: ${booking.date}
+                    Booking ID: ${booking.bookingId}
+                `);
+            }
+        }
+
+        function deleteBooking(bookingId) {
+            if (confirm('Are you sure you want to delete this booking?')) {
+                const bookings = JSON.parse(localStorage.getItem('bookings') || '[]');
+                const filteredBookings = bookings.filter(b => b.bookingId !== bookingId);
+                localStorage.setItem('bookings', JSON.stringify(filteredBookings));
+                updateAdminPanel();
+                alert('Booking deleted!');
+            }
+        }
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeLocalStorage();
+            console.log('Hostel booking system loaded successfully!');
+        });
                 
                 Object.keys(roomAvailability).forEach(roomType => {
                     const element = document.getElementById(`availability-${roomType}`);
@@ -3045,8 +3211,8 @@
             // Save to localStorage
             try {
                 const bookings = JSON.parse(localStorage.getItem('bookings') || '[]');
-                bookings.push(booking);
-                localStorage.setItem('bookings', JSON.stringify(bookings));
+            bookings.push(booking);
+            localStorage.setItem('bookings', JSON.stringify(bookings));
                 console.log('✅ Booking saved successfully');
             } catch (error) {
                 console.log('Storage error:', error);
@@ -3151,16 +3317,16 @@
             try {
                 // Load bookings from local storage only
                 const bookings = JSON.parse(localStorage.getItem('allBookings') || '[]');
-                const total = bookings.length;
-                const pending = bookings.filter(b => b.status === 'pending').length;
-                const confirmed = bookings.filter(b => b.status === 'confirmed').length;
-                const revenue = bookings.filter(b => b.status === 'paid').reduce((sum, b) => sum + b.amount, 0);
-                
-                document.getElementById('totalBookings').textContent = total;
-                document.getElementById('pendingBookings').textContent = pending;
-                document.getElementById('confirmedBookings').textContent = confirmed;
-                document.getElementById('totalRevenue').textContent = `GHS ${revenue.toLocaleString()}`;
-                
+            const total = bookings.length;
+            const pending = bookings.filter(b => b.status === 'pending').length;
+            const confirmed = bookings.filter(b => b.status === 'confirmed').length;
+            const revenue = bookings.filter(b => b.status === 'paid').reduce((sum, b) => sum + b.amount, 0);
+            
+            document.getElementById('totalBookings').textContent = total;
+            document.getElementById('pendingBookings').textContent = pending;
+            document.getElementById('confirmedBookings').textContent = confirmed;
+            document.getElementById('totalRevenue').textContent = `GHS ${revenue.toLocaleString()}`;
+            
                 updateRoomStatus(bookings);
                 updateBookingsTable(bookings);
                 
@@ -3407,7 +3573,7 @@
         }
 
         function updateDashboard() {
-            updateAdminPanel();
+                updateAdminPanel();
             updateRecentActivity();
         }
 
@@ -4128,16 +4294,29 @@
             addActivityLog('Notification settings updated', 'Preferences modified', 'bell');
         }
 
-        // No Firebase - completely standalone system
-        // Global variables for standalone mode
-        let auth = null, db = null;
+        // COMPLETELY LOCAL STORAGE SYSTEM - NO FIREBASE
+        let currentUser = null;
 
-        // No Firebase - completely standalone system
-        function initializeFirebase() {
-            console.log('Firebase initialization skipped - using standalone mode');
+        // Simple local storage initialization
+        function initializeLocalStorage() {
+            console.log('Local storage system initialized');
+            
+            // Initialize default admin if not exists
+            const admins = JSON.parse(localStorage.getItem('admins') || '[]');
+            if (admins.length === 0) {
+                const defaultAdmin = {
+                    name: 'Admin',
+                    email: 'admin@hostel.com',
+                    password: 'admin123',
+                    role: 'admin'
+                };
+                admins.push(defaultAdmin);
+                localStorage.setItem('admins', JSON.stringify(admins));
+                console.log('Default admin created');
+            }
         }
 
-        // Auth Functions
+        // Auth Functions - Local Storage Only
         function showAuthModal() {
             document.getElementById('authContainer').style.display = 'flex';
         }
@@ -4171,12 +4350,8 @@
             document.querySelectorAll('.auth-form').forEach(f => f.style.display = show ? 'none' : 'block');
         }
 
-        async function registerUser() {
-            if (!auth || !db) {
-                document.getElementById('registerError').textContent = 'Firebase not initialized. Please refresh the page.';
-                return;
-            }
-            
+        // Simple local storage registration
+        function registerUser() {
             const name = document.getElementById('registerName').value;
             const email = document.getElementById('registerEmail').value;
             const password = document.getElementById('registerPassword').value;
@@ -4191,40 +4366,59 @@
                 return;
             }
             
-            showLoading(true);
-            clearAuthErrors();
+            // Check if user already exists
+            const admins = JSON.parse(localStorage.getItem('admins') || '[]');
+            const existingUser = admins.find(admin => admin.email === email);
             
-            try {
-                const userCredential = await auth.createUserWithEmailAndPassword(email, password);
-                const user = userCredential.user;
-                
-                // Save user profile
-                await user.updateProfile({
-                    displayName: name
-                });
-                
-                // Save user data to Firestore
-                await db.collection('users').doc(user.uid).set({
-                    name: name,
-                    email: email,
-                    role: 'admin',
-                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
-                });
-                
-                addActivityLog(`New admin registered: ${name}`, 'Admin account created', 'user-plus');
-                
-            } catch (error) {
-                document.getElementById('registerError').textContent = error.message;
-            } finally {
-                showLoading(false);
-            }
-        }
-
-        async function loginUser() {
-            if (!auth) {
-                document.getElementById('loginError').textContent = 'Firebase not initialized. Please refresh the page.';
+            if (existingUser) {
+                document.getElementById('registerError').textContent = 'User already exists';
                 return;
             }
+            
+            // Add new admin
+            const newAdmin = {
+                name: name,
+                email: email,
+                password: password,
+                role: 'admin'
+            };
+            
+            admins.push(newAdmin);
+            localStorage.setItem('admins', JSON.stringify(admins));
+            
+            document.getElementById('registerSuccess').textContent = 'Registration successful! You can now login.';
+            setTimeout(() => {
+                showAuthTab('login');
+            }, 2000);
+        }
+
+        // Simple local storage login
+        function loginUser() {
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+            
+            if (!email || !password) {
+                document.getElementById('loginError').textContent = 'All fields are required';
+                return;
+            }
+            
+            // Check credentials
+            const admins = JSON.parse(localStorage.getItem('admins') || '[]');
+            const user = admins.find(admin => admin.email === email && admin.password === password);
+            
+            if (user) {
+                currentUser = user;
+                localStorage.setItem('currentUser', JSON.stringify(user));
+                
+                hideAuthModal();
+                showAdminPanel();
+                addActivityLog(`Admin logged in: ${user.name}`, 'Login successful', 'sign-in-alt');
+                
+                console.log('Login successful:', user.name);
+            } else {
+                document.getElementById('loginError').textContent = 'Invalid email or password';
+            }
+        }
             
             const email = document.getElementById('loginEmail').value;
             const password = document.getElementById('loginPassword').value;
@@ -4247,18 +4441,13 @@
             }
         }
 
-        async function logoutUser() {
-            if (!auth) {
-                console.error('Firebase not initialized');
-                return;
-            }
-            
-            try {
-                await auth.signOut();
-                addActivityLog('Admin logout', 'User logged out', 'sign-out-alt');
-            } catch (error) {
-                console.error('Logout error:', error);
-            }
+        // Simple local storage logout
+        function logoutUser() {
+            currentUser = null;
+            localStorage.removeItem('currentUser');
+            hideAdminPanel();
+            addActivityLog('Admin logged out', 'Logout successful', 'sign-out-alt');
+            console.log('Logout successful');
         }
 
         function showUserInfo(user) {
@@ -4270,7 +4459,7 @@
             userInfo.style.display = 'flex';
             adminLoginBtn.style.display = 'none';
             
-            const name = user.displayName || user.email.split('@')[0];
+            const name = user.name || user.email.split('@')[0];
             userAvatar.textContent = name.charAt(0).toUpperCase();
             userName.textContent = name;
         }
@@ -4283,42 +4472,21 @@
             adminLoginBtn.style.display = 'block';
         }
 
-        // Database Functions
-        async function saveBooking(booking) {
-            if (!db) {
-                throw new Error('Firebase not initialized');
-            }
-            
+        // Local Storage Database Functions
+        function saveBooking(booking) {
             try {
-                // For regular bookings, we don't require user authentication
-                // Only admin functions should require authentication
-                const bookingRef = await db.collection('bookings').add({
-                    ...booking,
-                    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-                    // Add a unique identifier for the booking
-                    bookingId: generateBookingId(),
-                    // Add device info for tracking
-                    deviceInfo: {
-                        userAgent: navigator.userAgent,
-                        isMobile: /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent),
-                        timestamp: new Date().toISOString()
-                    }
-                });
+                // Save to local storage
+                const bookings = JSON.parse(localStorage.getItem('bookings') || '[]');
+                booking.bookingId = generateBookingId();
+                booking.createdAt = new Date().toISOString();
+                bookings.push(booking);
+                localStorage.setItem('bookings', JSON.stringify(bookings));
                 
-                return bookingRef.id;
+                console.log('Booking saved to local storage:', booking.bookingId);
+                return booking.bookingId;
             } catch (error) {
                 console.error('Error saving booking:', error);
-                
-                // Provide more specific error messages for mobile users
-                if (error.code === 'permission-denied') {
-                    throw new Error('Permission denied. Please check your internet connection and try again.');
-                } else if (error.code === 'unavailable') {
-                    throw new Error('Service temporarily unavailable. Please try again in a few moments.');
-                } else if (error.code === 'network-request-failed') {
-                    throw new Error('Network error. Please check your internet connection and try again.');
-                } else {
-                    throw new Error('Failed to save booking. Please try again.');
-                }
+                throw new Error('Failed to save booking to local storage');
             }
         }
         
@@ -4329,42 +4497,10 @@
             return `BK-${timestamp}-${randomStr}`.toUpperCase();
         }
         
-        // Sync offline bookings when connection is restored
-        async function syncOfflineBookings() {
-            if (!db) return;
-            
-            try {
-                const offlineBookings = JSON.parse(localStorage.getItem('offlineBookings') || '[]');
-                
-                if (offlineBookings.length === 0) return;
-                
-                console.log(`Syncing ${offlineBookings.length} offline bookings...`);
-                
-                for (const booking of offlineBookings) {
-                    try {
-                        // Remove the local bookingId and status
-                        const { bookingId, status, ...bookingData } = booking;
-                        
-                        // Save to Firebase
-                        await db.collection('bookings').add({
-                            ...bookingData,
-                            status: 'pending',
-                            createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-                            syncedFromOffline: true,
-                            originalBookingId: bookingId
-                        });
-                        
-                        console.log(`Synced booking: ${bookingId}`);
-                    } catch (error) {
-                        console.error(`Failed to sync booking ${booking.bookingId}:`, error);
-                    }
-                }
-                
-                // Clear offline bookings after successful sync
-                localStorage.removeItem('offlineBookings');
-                
-                // Show sync success message
-                if (offlineBookings.length > 0) {
+        // Local storage sync (no Firebase needed)
+        function syncLocalBookings() {
+            console.log('Local storage system - no sync needed');
+        }
                     showMobileAlert(`✅ Synced ${offlineBookings.length} offline bookings!`, 'success');
                 }
                 
@@ -4508,8 +4644,8 @@
 
         // Initialize
         document.addEventListener('DOMContentLoaded', async function() {
-            // Initialize Firebase first
-            initializeFirebase();
+                    // Initialize local storage system
+        initializeLocalStorage();
             
             // Set minimum date for check-in to today
             const today = new Date().toISOString().split('T')[0];

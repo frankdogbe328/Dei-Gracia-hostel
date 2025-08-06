@@ -2777,6 +2777,163 @@
             }
         }
 
+        // Admin tab navigation
+        function showAdminTab(tabName) {
+            // Hide all tabs
+            document.querySelectorAll('.admin-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Remove active class from all nav tabs
+            document.querySelectorAll('.nav-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Show selected tab
+            const selectedTab = document.getElementById(tabName + 'Tab');
+            if (selectedTab) {
+                selectedTab.classList.add('active');
+            }
+            
+            // Add active class to clicked nav tab
+            event.target.classList.add('active');
+            
+            // Update content based on tab
+            switch(tabName) {
+                case 'dashboard':
+                    updateAdminPanel();
+                    break;
+                case 'bookings':
+                    updateBookingsTable(JSON.parse(localStorage.getItem('bookings') || '[]'));
+                    break;
+                case 'rooms':
+                    updateRoomsTab();
+                    break;
+                case 'users':
+                    updateUsersTab();
+                    break;
+                case 'reports':
+                    updateReportsTab();
+                    break;
+            }
+        }
+
+        // Reports functions
+        function updateReportsTab() {
+            const bookings = JSON.parse(localStorage.getItem('bookings') || '[]');
+            updateBookingChart(bookings);
+            updateRevenueChart(bookings);
+            updateOccupancyChart(bookings);
+        }
+
+        function updateBookingChart(bookings) {
+            const bookingChart = document.getElementById('bookingChart');
+            if (bookingChart) {
+                const total = bookings.length;
+                const pending = bookings.filter(b => b.status === 'pending').length;
+                const confirmed = bookings.filter(b => b.status === 'confirmed').length;
+                
+                bookingChart.innerHTML = `
+                    <div style="text-align: center; padding: 1rem;">
+                        <h5>Booking Statistics</h5>
+                        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-top: 1rem;">
+                            <div style="background: #3498db; color: white; padding: 1rem; border-radius: 8px;">
+                                <h3>${total}</h3>
+                                <p>Total Bookings</p>
+                            </div>
+                            <div style="background: #f39c12; color: white; padding: 1rem; border-radius: 8px;">
+                                <h3>${pending}</h3>
+                                <p>Pending</p>
+                            </div>
+                            <div style="background: #27ae60; color: white; padding: 1rem; border-radius: 8px;">
+                                <h3>${confirmed}</h3>
+                                <p>Confirmed</p>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        function updateRevenueChart(bookings) {
+            const revenueChart = document.getElementById('revenueChart');
+            if (revenueChart) {
+                const totalRevenue = bookings.reduce((sum, booking) => sum + (booking.amount || 0), 0);
+                const confirmedRevenue = bookings.filter(b => b.status === 'confirmed').reduce((sum, booking) => sum + (booking.amount || 0), 0);
+                
+                revenueChart.innerHTML = `
+                    <div style="text-align: center; padding: 1rem;">
+                        <h5>Revenue Statistics</h5>
+                        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; margin-top: 1rem;">
+                            <div style="background: #27ae60; color: white; padding: 1rem; border-radius: 8px;">
+                                <h3>GHS ${totalRevenue.toLocaleString()}</h3>
+                                <p>Total Revenue</p>
+                            </div>
+                            <div style="background: #e74c3c; color: white; padding: 1rem; border-radius: 8px;">
+                                <h3>GHS ${confirmedRevenue.toLocaleString()}</h3>
+                                <p>Confirmed Revenue</p>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        function updateOccupancyChart(bookings) {
+            const occupancyChart = document.getElementById('occupancyChart');
+            if (occupancyChart) {
+                const roomTypes = ['2-person', '2-person-prepaid', '3-person', '4-person', '6-person'];
+                let html = '<div style="text-align: center; padding: 1rem;"><h5>Room Type Distribution</h5>';
+                
+                roomTypes.forEach(roomType => {
+                    const count = bookings.filter(b => b.roomType === roomType).length;
+                    if (count > 0) {
+                        html += `
+                            <div style="background: #f8f9fa; padding: 0.5rem; margin: 0.5rem 0; border-radius: 5px;">
+                                <strong>${roomType}:</strong> ${count} bookings
+                            </div>
+                        `;
+                    }
+                });
+                
+                html += '</div>';
+                occupancyChart.innerHTML = html;
+            }
+        }
+
+        // Rooms functions
+        function updateRoomsTab() {
+            const roomStatusGrid = document.getElementById('roomStatusGrid');
+            if (roomStatusGrid) {
+                roomStatusGrid.innerHTML = '<p style="text-align: center; color: #6c757d;">Room management will be implemented soon.</p>';
+            }
+        }
+
+        // Users functions
+        function updateUsersTab() {
+            const usersTableBody = document.getElementById('usersTableBody');
+            if (usersTableBody) {
+                const admins = JSON.parse(localStorage.getItem('admins') || '[]');
+                usersTableBody.innerHTML = '';
+                
+                admins.forEach(admin => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${admin.name}</td>
+                        <td>${admin.email}</td>
+                        <td>${admin.role}</td>
+                        <td>Active</td>
+                        <td>Never</td>
+                        <td>
+                            <button class="btn btn-sm btn-secondary">Edit</button>
+                            <button class="btn btn-sm btn-danger">Delete</button>
+                        </td>
+                    `;
+                    usersTableBody.appendChild(row);
+                });
+            }
+        }
+
         // Initialize on page load
         document.addEventListener('DOMContentLoaded', function() {
             initializeLocalStorage();

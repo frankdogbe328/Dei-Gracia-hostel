@@ -2542,7 +2542,8 @@
             
             // Get bookings from both local storage and global bookings
             const localBookings = JSON.parse(localStorage.getItem('allBookings') || '[]');
-            const existingBookings = [...bookings, ...localBookings].filter(b => 
+            const globalBookings = bookings || []; // Safety check
+            const existingBookings = [...globalBookings, ...localBookings].filter(b => 
                 b.roomType === roomType && (b.status === 'paid' || b.status === 'pending')
             );
             
@@ -4237,6 +4238,49 @@
             }
         }
         
+        // Test function to verify booking system is working
+        function testBookingSystem() {
+            console.log('🧪 Testing booking system...');
+            
+            // Test local storage
+            try {
+                const testBooking = {
+                    firstName: 'Test',
+                    lastName: 'User',
+                    bookingId: 'TEST-123',
+                    timestamp: new Date().toISOString()
+                };
+                
+                const allBookings = JSON.parse(localStorage.getItem('allBookings') || '[]');
+                allBookings.push(testBooking);
+                localStorage.setItem('allBookings', JSON.stringify(allBookings));
+                
+                const retrieved = JSON.parse(localStorage.getItem('allBookings') || '[]');
+                const found = retrieved.find(b => b.bookingId === 'TEST-123');
+                
+                if (found) {
+                    console.log('✅ Local storage working perfectly');
+                    // Clean up test data
+                    const cleaned = retrieved.filter(b => b.bookingId !== 'TEST-123');
+                    localStorage.setItem('allBookings', JSON.stringify(cleaned));
+                } else {
+                    console.log('❌ Local storage test failed');
+                }
+            } catch (error) {
+                console.log('❌ Local storage error:', error);
+            }
+            
+            // Test bed assignment
+            try {
+                const bed = getNextAvailableBed('4-person');
+                console.log('✅ Bed assignment working, next bed:', bed);
+            } catch (error) {
+                console.log('❌ Bed assignment error:', error);
+            }
+            
+            console.log('🧪 Booking system test complete');
+        }
+        
         // Network status monitoring
         function setupNetworkMonitoring() {
             // Check if online/offline
@@ -4329,6 +4373,9 @@
             
             // Check for offline bookings
             checkOfflineBookings();
+            
+            // Test booking system
+            testBookingSystem();
             
             // Update room availability display
             await updateRoomAvailabilityDisplay();

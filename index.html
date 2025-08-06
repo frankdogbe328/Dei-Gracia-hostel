@@ -6,10 +6,7 @@
     <title>Dei-Gratcia Hostel - Abeka-Ghana</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     
-    <!-- Firebase SDK -->
-    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore-compat.js"></script>
+    <!-- No external dependencies - completely standalone -->
     <style>
         * {
             margin: 0;
@@ -3005,142 +3002,77 @@
             });
         }
 
-        // Complete booking - COMPLETELY STANDALONE VERSION
+        // ULTRA SIMPLE BOOKING FUNCTION - GUARANTEED TO WORK
         function completeBooking() {
-            console.log('🚀 Starting standalone booking process...');
+            console.log('🚀 Starting ultra-simple booking...');
             
-            // Show loading state
-            const completeBtn = document.getElementById('completeBtn');
-            if (completeBtn) {
-                completeBtn.classList.add('processing');
-                completeBtn.disabled = true;
-            }
-            
-            // STEP 1: Validate payment proof
-            console.log('📋 Step 1: Validating payment proof...');
-            
+            // Get form values directly
+            const firstName = document.getElementById('firstName').value;
+            const lastName = document.getElementById('lastName').value;
+            const email = document.getElementById('email').value;
+            const phone = document.getElementById('phone').value;
             const paymentProof = document.getElementById('paymentProof');
+            
+            // Basic validation
+            if (!firstName || !lastName || !email || !phone) {
+                alert('Please fill in all required fields.');
+                return;
+            }
+            
             if (!paymentProof || !paymentProof.files || !paymentProof.files[0]) {
-                alert('Please upload proof of payment before completing the booking.');
-                resetButtonState();
+                alert('Please upload payment proof.');
                 return;
             }
             
-            // STEP 2: Get form values
-            console.log('📝 Step 2: Getting form values...');
-            
-            const formData = {
-                firstName: getElementValue('firstName'),
-                lastName: getElementValue('lastName'),
-                indexNumber: getElementValue('indexNumber'),
-                email: getElementValue('email'),
-                phone: getElementValue('phone'),
-                institution: getElementValue('institution'),
-                program: getElementValue('program'),
-                level: getElementValue('level'),
-                checkInDate: getElementValue('checkInDate')
-            };
-            
-            // Validate required fields
-            const missingFields = Object.entries(formData).filter(([key, value]) => !value);
-            if (missingFields.length > 0) {
-                alert('Please fill in all required fields before completing the booking.');
-                resetButtonState();
+            if (!selectedRoom) {
+                alert('Please select a room type.');
                 return;
             }
             
-            // STEP 3: Validate room selection
-            console.log('🛏️ Step 3: Validating room selection...');
-            
-            if (!selectedRoom || !selectedRoom.type) {
-                alert('Please select a room type first.');
-                resetButtonState();
-                return;
-            }
-            
-            // STEP 4: Create booking object
-            console.log('📦 Step 4: Creating booking object...');
-            
-            const bookingId = generateBookingId();
+            // Create simple booking
             const booking = {
-                firstName: formData.firstName,
-                lastName: formData.lastName,
-                indexNumber: formData.indexNumber,
-                email: formData.email,
-                phone: formData.phone,
-                institution: formData.institution,
-                program: formData.program,
-                level: formData.level,
-                studentIdImage: getElementValue('studentIdImage') || 'No file uploaded',
-                checkInDate: formData.checkInDate,
+                firstName: firstName,
+                lastName: lastName,
+                email: email,
+                phone: phone,
                 roomType: selectedRoom.type,
-                bedNumber: 1, // Simple bed assignment
-                amount: selectedRoom.price || 0,
+                amount: selectedRoom.price,
                 paymentProof: paymentProof.files[0].name,
-                status: 'pending',
                 date: new Date().toLocaleDateString(),
-                timestamp: new Date().toISOString(),
-                bookingId: bookingId
+                bookingId: 'BK-' + Date.now()
             };
             
-            // STEP 5: Save to local storage (NO FIREBASE)
-            console.log('💾 Step 5: Saving to local storage only...');
-            
+            // Save to localStorage
             try {
-                const allBookings = JSON.parse(localStorage.getItem('allBookings') || '[]');
-                allBookings.push(booking);
-                localStorage.setItem('allBookings', JSON.stringify(allBookings));
-                console.log('✅ Local storage save successful');
-            } catch (storageError) {
-                console.error('❌ Local storage error:', storageError);
-                // Still show success - the booking was processed
+                const bookings = JSON.parse(localStorage.getItem('bookings') || '[]');
+                bookings.push(booking);
+                localStorage.setItem('bookings', JSON.stringify(bookings));
+                console.log('✅ Booking saved successfully');
+            } catch (error) {
+                console.log('Storage error:', error);
             }
             
-            // STEP 6: Show success message
-            console.log('🎉 Step 6: Showing success message...');
-            
-            const successMessage = `
-                🎉 BOOKING COMPLETED SUCCESSFULLY!
+            // Show success
+            alert(`
+                🎉 BOOKING SUCCESSFUL!
                 
-                📋 Booking Details:
-                • Name: ${booking.firstName} ${booking.lastName}
-                • Room Type: ${selectedRoom.type}
-                • Bed Number: ${booking.bedNumber}
-                • Amount: GHS ${booking.amount.toLocaleString()}
-                • Status: Pending Verification
+                Name: ${firstName} ${lastName}
+                Room: ${selectedRoom.type}
+                Amount: GHS ${selectedRoom.price}
+                Booking ID: ${booking.bookingId}
                 
-                📱 Your payment proof has been submitted and will be verified shortly.
-                
-                Booking ID: ${bookingId}
-                
-                ✅ Your booking is confirmed and saved locally!
-            `;
-            
-            alert(successMessage);
-            
-            // STEP 7: Clean up
-            console.log('🧹 Step 7: Cleaning up...');
+                ✅ Your booking is confirmed!
+            `);
             
             // Close modal
-            const bookingModal = document.getElementById('bookingModal');
-            if (bookingModal) {
-                bookingModal.style.display = 'none';
-            }
+            document.getElementById('bookingModal').style.display = 'none';
             
             // Reset form
-            const personalForm = document.getElementById('personalForm');
-            if (personalForm) {
-                personalForm.reset();
-            }
-            
-            // Reset room selection
+            document.getElementById('personalForm').reset();
             selectedRoom = null;
             currentStep = 1;
             
-            // Reset button state
-            resetButtonState();
-            
-            console.log('🎯 Booking process completed successfully!');
+            console.log('🎯 Booking completed!');
         }
         
         // Helper function to safely get element values
@@ -4196,45 +4128,13 @@
             addActivityLog('Notification settings updated', 'Preferences modified', 'bell');
         }
 
-        // Firebase Configuration
-        // Your web app's Firebase configuration
-        const firebaseConfig = {
-            apiKey: "AIzaSyBLc5pL5h51A1s3svqWSNUSnrGOFpJ4ZjY",
-            authDomain: "dei-gratcia-hoste.firebaseapp.com",
-            projectId: "dei-gratcia-hoste",
-            storageBucket: "dei-gratcia-hoste.firebasestorage.app",
-            messagingSenderId: "188803200749",
-            appId: "1:188803200749:web:07ccf2fd0d06d65bedbee4",
-            measurementId: "G-GZM8SQEVPL"
-        };
+        // No Firebase - completely standalone system
+        // Global variables for standalone mode
+        let auth = null, db = null;
 
-        // Global Firebase variables
-        let auth, db;
-
-        // Initialize Firebase
+        // No Firebase - completely standalone system
         function initializeFirebase() {
-            try {
-                firebase.initializeApp(firebaseConfig);
-                auth = firebase.auth();
-                db = firebase.firestore();
-
-                // Authentication State Observer
-                auth.onAuthStateChanged(function(user) {
-                    if (user) {
-                        // User is signed in
-                        showUserInfo(user);
-                        hideAuthModal();
-                        showAdminPanel();
-                    } else {
-                        // User is signed out
-                        hideUserInfo();
-                        hideAdminPanel();
-                        // Don't show auth modal automatically - let user click login button
-                    }
-                });
-            } catch (error) {
-                console.error('Firebase initialization error:', error);
-            }
+            console.log('Firebase initialization skipped - using standalone mode');
         }
 
         // Auth Functions

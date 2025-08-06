@@ -2780,11 +2780,52 @@
                     timestamp: new Date().toISOString()
                 };
                 
-                // Save booking to Firebase
-                const bookingId = await saveBooking(booking);
+                let bookingId;
                 
-                if (!bookingId) {
-                    throw new Error('Failed to save booking');
+                // Try to save to Firebase first
+                try {
+                    bookingId = await saveBooking(booking);
+                    
+                    if (!bookingId) {
+                        throw new Error('Failed to save booking');
+                    }
+                } catch (firebaseError) {
+                    console.error('Firebase save failed:', firebaseError);
+                    
+                    // Fallback: Save locally and show offline message
+                    bookingId = generateBookingId();
+                    booking.bookingId = bookingId;
+                    booking.status = 'pending-offline';
+                    
+                    // Save to localStorage as backup
+                    const offlineBookings = JSON.parse(localStorage.getItem('offlineBookings') || '[]');
+                    offlineBookings.push(booking);
+                    localStorage.setItem('offlineBookings', JSON.stringify(offlineBookings));
+                    
+                    // Show offline success message
+                    const offlineMessage = `
+                        📱 Booking saved offline!
+                        
+                        Your booking has been saved locally and will be synced when connection is restored.
+                        
+                        📋 Booking Details:
+                        • Name: ${booking.firstName} ${booking.lastName}
+                        • Room Type: ${selectedRoom.type}
+                        • Bed Number: ${assignedBed}
+                        • Amount: GHS ${selectedRoom.price.toLocaleString()}
+                        • Status: Pending (Offline)
+                        
+                        Booking ID: ${bookingId}
+                        
+                        ⚠️ Please ensure you have a stable internet connection for future bookings.
+                    `;
+                    
+                    alert(offlineMessage);
+                    
+                    // Close modal and reset form
+                    closeBookingModal();
+                    resetBookingForm();
+                    return;
                 }
                 
                 // Update availability display
@@ -2843,8 +2884,6 @@
                 
                 if (error.message.includes('Firebase not initialized')) {
                     errorMessage = 'Connection error. Please check your internet connection and try again.';
-                } else if (error.message.includes('User not authenticated')) {
-                    errorMessage = 'Authentication error. Please refresh the page and try again.';
                 } else if (error.message.includes('Failed to save booking')) {
                     errorMessage = 'Failed to save booking. Please try again.';
                 }
@@ -4062,37 +4101,141 @@
 
         // Database Functions
         async function saveBooking(booking) {
-            if (!auth || !db) {
+            if (!db) {
                 throw new Error('Firebase not initialized');
             }
             
             try {
-                const user = auth.currentUser;
-                if (!user) throw new Error('User not authenticated');
-                
+                // For regular bookings, we don't require user authentication
+                // Only admin functions should require authentication
                 const bookingRef = await db.collection('bookings').add({
                     ...booking,
-                    createdBy: user.uid,
-                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                    // Add a unique identifier for the booking
+                    bookingId: generateBookingId(),
+                    // Add device info for tracking
+                    deviceInfo: {
+                        userAgent: navigator.userAgent,
+                        isMobile: /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent),
+                        timestamp: new Date().toISOString()
+                    }
                 });
                 
                 return bookingRef.id;
             } catch (error) {
                 console.error('Error saving booking:', error);
-                throw error;
+                
+                // Provide more specific error messages for mobile users
+                if (error.code === 'permission-denied') {
+                    throw new Error('Permission denied. Please check your internet connection and try again.');
+                } else if (error.code === 'unavailable') {
+                    throw new Error('Service temporarily unavailable. Please try again in a few moments.');
+                } else if (error.code === 'network-request-failed') {
+                    throw new Error('Network error. Please check your internet connection and try again.');
+                } else {
+                    throw new Error('Failed to save booking. Please try again.');
+                }
             }
+        }
+        
+        // Generate a unique booking ID
+        function generateBookingId() {
+            const timestamp = Date.now().toString(36);
+            const randomStr = Math.random().toString(36).substr(2, 5);
+            return `BK-${timestamp}-${randomStr}`.toUpperCase();
+        }
+        
+        // Sync offline bookings when connection is restored
+        async function syncOfflineBookings() {
+            if (!db) return;
+            
+            try {
+                const offlineBookings = JSON.parse(localStorage.getItem('offlineBookings') || '[]');
+                
+                if (offlineBookings.length === 0) return;
+                
+                console.log(`Syncing ${offlineBookings.length} offline bookings...`);
+                
+                for (const booking of offlineBookings) {
+                    try {
+                        // Remove the local bookingId and status
+                        const { bookingId, status, ...bookingData } = booking;
+                        
+                        // Save to Firebase
+                        await db.collection('bookings').add({
+                            ...bookingData,
+                            status: 'pending',
+                            createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                            syncedFromOffline: true,
+                            originalBookingId: bookingId
+                        });
+                        
+                        console.log(`Synced booking: ${bookingId}`);
+                    } catch (error) {
+                        console.error(`Failed to sync booking ${booking.bookingId}:`, error);
+                    }
+                }
+                
+                // Clear offline bookings after successful sync
+                localStorage.removeItem('offlineBookings');
+                
+                // Show sync success message
+                if (offlineBookings.length > 0) {
+                    showMobileAlert(`✅ Synced ${offlineBookings.length} offline bookings!`, 'success');
+                }
+                
+            } catch (error) {
+                console.error('Error syncing offline bookings:', error);
+            }
+        }
+        
+        // Check for offline bookings on page load
+        function checkOfflineBookings() {
+            const offlineBookings = JSON.parse(localStorage.getItem('offlineBookings') || '[]');
+            
+            if (offlineBookings.length > 0) {
+                const message = `You have ${offlineBookings.length} offline booking(s) that need to be synced. Please ensure you have a stable internet connection.`;
+                showMobileAlert(message, 'info');
+                
+                // Try to sync them
+                setTimeout(() => {
+                    syncOfflineBookings();
+                }, 2000);
+            }
+        }
+        
+        // Network status monitoring
+        function setupNetworkMonitoring() {
+            // Check if online/offline
+            function updateNetworkStatus() {
+                const isOnline = navigator.onLine;
+                
+                if (!isOnline) {
+                    showMobileAlert('📡 You are currently offline. Bookings will be saved locally.', 'info');
+                }
+            }
+            
+            // Listen for online/offline events
+            window.addEventListener('online', function() {
+                showMobileAlert('✅ Internet connection restored!', 'success');
+                syncOfflineBookings();
+            });
+            
+            window.addEventListener('offline', function() {
+                showMobileAlert('📡 You are now offline. Bookings will be saved locally.', 'info');
+            });
+            
+            // Initial check
+            updateNetworkStatus();
         }
 
         async function loadBookings() {
-            if (!auth || !db) {
+            if (!db) {
                 console.error('Firebase not initialized');
                 return [];
             }
             
             try {
-                const user = auth.currentUser;
-                if (!user) return [];
-                
                 const snapshot = await db.collection('bookings').get();
                 return snapshot.docs.map(doc => ({
                     id: doc.id,
@@ -4100,6 +4243,16 @@
                 }));
             } catch (error) {
                 console.error('Error loading bookings:', error);
+                
+                // Provide specific error messages
+                if (error.code === 'permission-denied') {
+                    console.error('Permission denied when loading bookings');
+                } else if (error.code === 'unavailable') {
+                    console.error('Service unavailable when loading bookings');
+                } else if (error.code === 'network-request-failed') {
+                    console.error('Network error when loading bookings');
+                }
+                
                 return [];
             }
         }
@@ -4137,6 +4290,12 @@
             
             // Setup drag and drop for payment proof
             setupDragAndDrop();
+            
+            // Setup network monitoring
+            setupNetworkMonitoring();
+            
+            // Check for offline bookings
+            checkOfflineBookings();
             
             // Update room availability display
             await updateRoomAvailabilityDisplay();

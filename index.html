@@ -3080,7 +3080,7 @@
                 <p>Access the admin panel</p>
             </div>
             <div style="padding: 2rem;">
-                <form id="loginForm">
+                <form id="loginForm" onsubmit="handleLoginSubmit(event)">
                     <div class="form-group">
                         <label for="username">Username</label>
                         <input type="text" id="username" name="username" autocomplete="username" required>
@@ -3424,6 +3424,10 @@
             document.getElementById('authContainer').style.display = 'none';
         }
 
+        function closeLoginModal() {
+            document.getElementById('loginModal').style.display = 'none';
+        }
+
         function showAuthTab(tab) {
             document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
             event.target.classList.add('active');
@@ -3437,11 +3441,17 @@
         }
 
         function loginUser() {
-            const email = document.getElementById('loginEmail').value;
-            const password = document.getElementById('loginPassword').value;
+            // Try to get credentials from both possible form fields
+            const email = document.getElementById('loginEmail')?.value || document.getElementById('username')?.value;
+            const password = document.getElementById('loginPassword')?.value || document.getElementById('password')?.value;
             
             if (!email || !password) {
-                document.getElementById('loginError').textContent = 'All fields are required';
+                const errorElement = document.getElementById('loginError');
+                if (errorElement) {
+                    errorElement.textContent = 'All fields are required';
+                } else {
+                    alert('All fields are required');
+                }
                 return;
             }
             
@@ -3451,10 +3461,16 @@
             if (user) {
                 currentUser = user;
                 hideAuthModal();
+                closeLoginModal();
                 showAdminPanel();
                 console.log('Login successful:', user.name);
             } else {
-                document.getElementById('loginError').textContent = 'Invalid credentials';
+                const errorElement = document.getElementById('loginError');
+                if (errorElement) {
+                    errorElement.textContent = 'Invalid credentials';
+                } else {
+                    alert('Invalid credentials. Try: admin@hostel.com / admin123');
+                }
             }
         }
 
@@ -4050,6 +4066,11 @@
                 // Desktop - open in Google Maps web
                 window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`);
             }
+        }
+
+        function handleLoginSubmit(event) {
+            event.preventDefault();
+            loginUser();
         }
 
         function shareLocation() {

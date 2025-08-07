@@ -2576,60 +2576,107 @@
             console.log('🚀 Starting booking process...');
             
             try {
-                // Get form values
-                const firstName = document.getElementById('firstName').value.trim();
-                const lastName = document.getElementById('lastName').value.trim();
-                const email = document.getElementById('email').value.trim();
-                const phone = document.getElementById('phone').value.trim();
-                const indexNumber = document.getElementById('indexNumber').value.trim();
-                const institution = document.getElementById('institution').value.trim();
-                const program = document.getElementById('program').value.trim();
-                const level = document.getElementById('level').value;
-                const checkInDate = document.getElementById('checkInDate').value;
+                // Get form values with debugging
+                const firstName = document.getElementById('firstName');
+                const lastName = document.getElementById('lastName');
+                const email = document.getElementById('email');
+                const phone = document.getElementById('phone');
+                const indexNumber = document.getElementById('indexNumber');
+                const institution = document.getElementById('institution');
+                const program = document.getElementById('program');
+                const level = document.getElementById('level');
+                const checkInDate = document.getElementById('checkInDate');
                 const paymentProof = document.getElementById('paymentProof');
                 
+                // Debug: Check if all elements exist
+                console.log('🔍 Form elements check:', {
+                    firstName: !!firstName,
+                    lastName: !!lastName,
+                    email: !!email,
+                    phone: !!phone,
+                    indexNumber: !!indexNumber,
+                    institution: !!institution,
+                    program: !!program,
+                    level: !!level,
+                    checkInDate: !!checkInDate,
+                    paymentProof: !!paymentProof
+                });
+                
+                // Get trimmed values
+                const firstNameValue = firstName ? firstName.value.trim() : '';
+                const lastNameValue = lastName ? lastName.value.trim() : '';
+                const emailValue = email ? email.value.trim() : '';
+                const phoneValue = phone ? phone.value.trim() : '';
+                const indexNumberValue = indexNumber ? indexNumber.value.trim() : '';
+                const institutionValue = institution ? institution.value.trim() : '';
+                const programValue = program ? program.value.trim() : '';
+                const levelValue = level ? level.value : '';
+                const checkInDateValue = checkInDate ? checkInDate.value : '';
+                
+                // Debug: Log all values
+                console.log('📝 Form values:', {
+                    firstName: firstNameValue,
+                    lastName: lastNameValue,
+                    email: emailValue,
+                    phone: phoneValue,
+                    indexNumber: indexNumberValue,
+                    institution: institutionValue,
+                    program: programValue,
+                    level: levelValue,
+                    checkInDate: checkInDateValue,
+                    selectedRoom: selectedRoom,
+                    paymentProof: paymentProof ? paymentProof.files[0] : null
+                });
+                
                 // Enhanced validation
-                if (!firstName || !lastName || !email || !phone || !indexNumber || 
-                    !institution || !program || !level || !checkInDate) {
+                if (!firstNameValue || !lastNameValue || !emailValue || !phoneValue || !indexNumberValue || 
+                    !institutionValue || !programValue || !levelValue || !checkInDateValue) {
+                    console.log('❌ Validation failed - missing fields');
                     alert('❌ Please fill in all required fields before completing the booking.');
                     return;
                 }
                 
                 if (!paymentProof || !paymentProof.files || !paymentProof.files[0]) {
+                    console.log('❌ Validation failed - no payment proof');
                     alert('❌ Please upload payment proof before completing the booking.');
                     return;
                 }
                 
                 if (!selectedRoom) {
+                    console.log('❌ Validation failed - no room selected');
                     alert('❌ Please select a room type before completing the booking.');
                     return;
                 }
                 
                 // Validate email format
                 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-                if (!emailRegex.test(email)) {
+                if (!emailRegex.test(emailValue)) {
+                    console.log('❌ Validation failed - invalid email');
                     alert('❌ Please enter a valid email address.');
                     return;
                 }
                 
                 // Validate phone number (basic validation)
                 const phoneRegex = /^[\+]?[0-9\s\-\(\)]{10,}$/;
-                if (!phoneRegex.test(phone)) {
+                if (!phoneRegex.test(phoneValue)) {
+                    console.log('❌ Validation failed - invalid phone');
                     alert('❌ Please enter a valid phone number.');
                     return;
                 }
                 
+                console.log('✅ All validations passed, creating booking object...');
+                
                 // Create comprehensive booking object
                 const booking = {
-                    firstName: firstName,
-                    lastName: lastName,
-                    email: email,
-                    phone: phone,
-                    indexNumber: indexNumber,
-                    institution: institution,
-                    program: program,
-                    level: level,
-                    checkInDate: checkInDate,
+                    firstName: firstNameValue,
+                    lastName: lastNameValue,
+                    email: emailValue,
+                    phone: phoneValue,
+                    indexNumber: indexNumberValue,
+                    institution: institutionValue,
+                    program: programValue,
+                    level: levelValue,
+                    checkInDate: checkInDateValue,
                     roomType: selectedRoom.type,
                     amount: selectedRoom.price,
                     paymentProof: paymentProof.files[0].name,
@@ -2706,16 +2753,16 @@
                         🎉 BOOKING SUCCESSFUL!
                         
                         📋 Booking Details:
-                        • Name: ${firstName} ${lastName}
-                        • Email: ${email}
-                        • Phone: ${phone}
-                        • Index Number: ${indexNumber}
-                        • Institution: ${institution}
-                        • Program: ${program}
-                        • Level: ${level}
+                        • Name: ${firstNameValue} ${lastNameValue}
+                        • Email: ${emailValue}
+                        • Phone: ${phoneValue}
+                        • Index Number: ${indexNumberValue}
+                        • Institution: ${institutionValue}
+                        • Program: ${programValue}
+                        • Level: ${levelValue}
                         • Room Type: ${selectedRoom.type}
                         • Amount: GHS ${selectedRoom.price}
-                        • Check-in Date: ${checkInDate}
+                        • Check-in Date: ${checkInDateValue}
                         • Booking ID: ${booking.bookingId}
                         • Status: Pending Confirmation
                         

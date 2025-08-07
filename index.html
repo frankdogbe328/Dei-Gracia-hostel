@@ -122,6 +122,132 @@
             margin-bottom: 2rem;
         }
 
+        /* Location Map Section Styles */
+        .location-section {
+            margin: 4rem 0;
+            padding: 2rem 0;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-radius: 20px;
+        }
+
+        .location-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 3rem;
+            align-items: center;
+        }
+
+        .location-info h2 {
+            color: #2c3e50;
+            font-size: 2rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .location-info p {
+            margin: 0.8rem 0;
+            font-size: 1.1rem;
+            color: #34495e;
+        }
+
+        .location-info p strong {
+            color: #2c3e50;
+            font-weight: 600;
+        }
+
+        .location-features {
+            margin-top: 2rem;
+        }
+
+        .feature {
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            margin: 1rem 0;
+            padding: 0.8rem;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .feature-icon {
+            font-size: 1.5rem;
+        }
+
+        .map-container {
+            position: relative;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        .map {
+            width: 100%;
+            height: 400px;
+            background: linear-gradient(135deg, #74b9ff, #0984e3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.2rem;
+            position: relative;
+        }
+
+        .map::before {
+            content: "📍 Dei-Gratcia Hostel";
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.8);
+            padding: 1rem 2rem;
+            border-radius: 25px;
+            font-weight: 600;
+            text-align: center;
+        }
+
+        .map-overlay {
+            position: absolute;
+            bottom: 1rem;
+            right: 1rem;
+        }
+
+        .map-overlay .btn {
+            background: rgba(255, 255, 255, 0.9);
+            color: #2c3e50;
+            border: none;
+            padding: 0.8rem 1.5rem;
+            border-radius: 25px;
+            font-weight: 600;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s ease;
+        }
+
+        .map-overlay .btn:hover {
+            background: white;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Responsive design for map section */
+        @media (max-width: 768px) {
+            .location-content {
+                grid-template-columns: 1fr;
+                gap: 2rem;
+            }
+
+            .map {
+                height: 300px;
+            }
+
+            .location-info h2 {
+                font-size: 1.5rem;
+            }
+
+            .location-info p {
+                font-size: 1rem;
+            }
+        }
+
         .text-center {
             text-align: center;
         }
@@ -1843,6 +1969,41 @@
                 <p>Your home away from home. Comfortable, affordable, and convenient student accommodation.</p>
                 <button class="btn btn-primary" onclick="openBookingModal()">Book Your Room Today</button>
             </div>
+            
+            <!-- Location Map Section -->
+            <div class="location-section">
+                <div class="location-content">
+                    <div class="location-info">
+                        <h2>📍 Find Us</h2>
+                        <p><strong>Dei-Gratcia Hostel</strong></p>
+                        <p>📍 Abeka, Accra, Ghana</p>
+                        <p>📞 Contact: +233 54 532 6363</p>
+                        <p>📧 Email: info@deigratciahostel.com</p>
+                        <div class="location-features">
+                            <div class="feature">
+                                <span class="feature-icon">🚌</span>
+                                <span>Near major transport routes</span>
+                            </div>
+                            <div class="feature">
+                                <span class="feature-icon">🏫</span>
+                                <span>Close to universities</span>
+                            </div>
+                            <div class="feature">
+                                <span class="feature-icon">🛒</span>
+                                <span>Near shopping centers</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="map-container">
+                        <div id="map" class="map"></div>
+                        <div class="map-overlay">
+                            <button class="btn btn-primary" onclick="openInMaps()">
+                                📍 Open in Maps
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </main>
 
@@ -3465,6 +3626,26 @@
                 nextBtn1.disabled = true;
                 nextBtn1.style.opacity = '0.6';
                 nextBtn1.style.cursor = 'not-allowed';
+            }
+        }
+
+        // Map functions
+        function openInMaps() {
+            // Coordinates for Abeka, Accra, Ghana (approximate)
+            const latitude = 5.6145;
+            const longitude = -0.1869;
+            const address = 'Dei-Gratcia Hostel, Abeka, Accra, Ghana';
+            
+            // Try to open in device's default map app
+            if (navigator.userAgent.match(/iPhone|iPad|iPod/i)) {
+                // iOS - open in Apple Maps
+                window.open(`maps://maps.apple.com/?q=${encodeURIComponent(address)}&ll=${latitude},${longitude}`);
+            } else if (navigator.userAgent.match(/Android/i)) {
+                // Android - open in Google Maps
+                window.open(`geo:${latitude},${longitude}?q=${encodeURIComponent(address)}`);
+            } else {
+                // Desktop - open in Google Maps web
+                window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`);
             }
         }
 

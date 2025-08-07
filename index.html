@@ -2556,76 +2556,151 @@
             }
         }
 
-        // Simple booking function - GUARANTEED TO WORK
+        // Enhanced booking function with better error handling
         function completeBooking() {
-            console.log('🚀 Starting simple booking...');
+            console.log('🚀 Starting booking process...');
             
-            // Get form values
-            const firstName = document.getElementById('firstName').value;
-            const lastName = document.getElementById('lastName').value;
-            const email = document.getElementById('email').value;
-            const phone = document.getElementById('phone').value;
-            const paymentProof = document.getElementById('paymentProof');
-            
-            // Basic validation
-            if (!firstName || !lastName || !email || !phone) {
-                alert('Please fill in all required fields.');
-                return;
-            }
-            
-            if (!paymentProof || !paymentProof.files || !paymentProof.files[0]) {
-                alert('Please upload payment proof.');
-                return;
-            }
-            
-            if (!selectedRoom) {
-                alert('Please select a room type.');
-                return;
-            }
-            
-            // Create booking
-            const booking = {
-                firstName: firstName,
-                lastName: lastName,
-                email: email,
-                phone: phone,
-                roomType: selectedRoom.type,
-                amount: selectedRoom.price,
-                paymentProof: paymentProof.files[0].name,
-                date: new Date().toLocaleDateString(),
-                bookingId: 'BK-' + Date.now(),
-                status: 'pending'
-            };
-            
-            // Save to localStorage
             try {
-                const bookings = JSON.parse(localStorage.getItem('bookings') || '[]');
-                bookings.push(booking);
-                localStorage.setItem('bookings', JSON.stringify(bookings));
-                console.log('✅ Booking saved successfully');
+                // Get form values
+                const firstName = document.getElementById('firstName').value.trim();
+                const lastName = document.getElementById('lastName').value.trim();
+                const email = document.getElementById('email').value.trim();
+                const phone = document.getElementById('phone').value.trim();
+                const indexNumber = document.getElementById('indexNumber').value.trim();
+                const institution = document.getElementById('institution').value.trim();
+                const program = document.getElementById('program').value.trim();
+                const level = document.getElementById('level').value;
+                const checkInDate = document.getElementById('checkInDate').value;
+                const paymentProof = document.getElementById('paymentProof');
+                
+                // Enhanced validation
+                if (!firstName || !lastName || !email || !phone || !indexNumber || 
+                    !institution || !program || !level || !checkInDate) {
+                    alert('❌ Please fill in all required fields before completing the booking.');
+                    return;
+                }
+                
+                if (!paymentProof || !paymentProof.files || !paymentProof.files[0]) {
+                    alert('❌ Please upload payment proof before completing the booking.');
+                    return;
+                }
+                
+                if (!selectedRoom) {
+                    alert('❌ Please select a room type before completing the booking.');
+                    return;
+                }
+                
+                // Validate email format
+                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                if (!emailRegex.test(email)) {
+                    alert('❌ Please enter a valid email address.');
+                    return;
+                }
+                
+                // Validate phone number (basic validation)
+                const phoneRegex = /^[\+]?[0-9\s\-\(\)]{10,}$/;
+                if (!phoneRegex.test(phone)) {
+                    alert('❌ Please enter a valid phone number.');
+                    return;
+                }
+                
+                // Create comprehensive booking object
+                const booking = {
+                    firstName: firstName,
+                    lastName: lastName,
+                    email: email,
+                    phone: phone,
+                    indexNumber: indexNumber,
+                    institution: institution,
+                    program: program,
+                    level: level,
+                    checkInDate: checkInDate,
+                    roomType: selectedRoom.type,
+                    amount: selectedRoom.price,
+                    paymentProof: paymentProof.files[0].name,
+                    paymentProofSize: paymentProof.files[0].size,
+                    paymentProofType: paymentProof.files[0].type,
+                    date: new Date().toLocaleDateString(),
+                    bookingId: 'BK-' + Date.now(),
+                    status: 'pending',
+                    createdAt: new Date().toISOString()
+                };
+                
+                // Save to localStorage with error handling
+                try {
+                    const bookings = JSON.parse(localStorage.getItem('bookings') || '[]');
+                    
+                    // Check for duplicate bookings (same email and room type)
+                    const existingBooking = bookings.find(b => 
+                        b.email === email && b.roomType === selectedRoom.type && b.status !== 'cancelled'
+                    );
+                    
+                    if (existingBooking) {
+                        alert('❌ You already have a booking for this room type. Please check your existing bookings.');
+                        return;
+                    }
+                    
+                    bookings.push(booking);
+                    localStorage.setItem('bookings', JSON.stringify(bookings));
+                    console.log('✅ Booking saved successfully to localStorage');
+                    
+                    // Show comprehensive success message
+                    const successMessage = `
+                        🎉 BOOKING SUCCESSFUL!
+                        
+                        📋 Booking Details:
+                        • Name: ${firstName} ${lastName}
+                        • Email: ${email}
+                        • Phone: ${phone}
+                        • Index Number: ${indexNumber}
+                        • Institution: ${institution}
+                        • Program: ${program}
+                        • Level: ${level}
+                        • Room Type: ${selectedRoom.type}
+                        • Amount: GHS ${selectedRoom.price}
+                        • Check-in Date: ${checkInDate}
+                        • Booking ID: ${booking.bookingId}
+                        • Status: Pending Confirmation
+                        
+                        ✅ Your booking has been submitted successfully!
+                        📧 You will receive a confirmation email shortly.
+                        ⏳ Please wait for admin confirmation.
+                    `;
+                    
+                    alert(successMessage);
+                    
+                    // Close modal and reset form
+                    document.getElementById('bookingModal').style.display = 'none';
+                    document.getElementById('personalForm').reset();
+                    
+                    // Reset file preview
+                    const filePreview = document.getElementById('filePreview');
+                    if (filePreview) {
+                        filePreview.style.display = 'none';
+                    }
+                    
+                    // Reset variables
+                    selectedRoom = null;
+                    currentStep = 1;
+                    
+                    // Reset step visibility
+                    document.getElementById('step1Content').classList.remove('hidden');
+                    document.getElementById('step2Content').classList.add('hidden');
+                    document.getElementById('step3Content').classList.add('hidden');
+                    
+                    console.log('🎯 Booking process completed successfully!');
+                    
+                } catch (storageError) {
+                    console.error('❌ Storage error:', storageError);
+                    alert('❌ Error saving booking. Please try again or contact support if the problem persists.');
+                    return;
+                }
+                
             } catch (error) {
-                console.log('Storage error:', error);
+                console.error('❌ Booking error:', error);
+                alert('❌ An unexpected error occurred. Please try again or contact support.');
+                return;
             }
-            
-            // Show success
-            alert(`
-                🎉 BOOKING SUCCESSFUL!
-                
-                Name: ${firstName} ${lastName}
-                Room: ${selectedRoom.type}
-                Amount: GHS ${selectedRoom.price}
-                Booking ID: ${booking.bookingId}
-                
-                ✅ Your booking is confirmed!
-            `);
-            
-            // Close modal and reset
-            document.getElementById('bookingModal').style.display = 'none';
-            document.getElementById('personalForm').reset();
-            selectedRoom = null;
-            currentStep = 1;
-            
-            console.log('🎯 Booking completed!');
         }
 
         // Modal functions
@@ -2647,6 +2722,9 @@
                 card.classList.remove('selected');
             });
             event.target.closest('.room-card').classList.add('selected');
+            
+            // Enable next button if we're on step 2
+            validateStep2();
             
             console.log('Room selected:', type, price);
         }
@@ -3096,9 +3174,182 @@
             }
         }
 
+        // Form validation and step navigation functions
+        function nextStep() {
+            if (currentStep === 1) {
+                // Validate step 1 form
+                const firstName = document.getElementById('firstName').value;
+                const lastName = document.getElementById('lastName').value;
+                const indexNumber = document.getElementById('indexNumber').value;
+                const phone = document.getElementById('phone').value;
+                const email = document.getElementById('email').value;
+                const institution = document.getElementById('institution').value;
+                const program = document.getElementById('program').value;
+                const level = document.getElementById('level').value;
+                const studentIdImage = document.getElementById('studentIdImage').files[0];
+                const checkInDate = document.getElementById('checkInDate').value;
+
+                if (!firstName || !lastName || !indexNumber || !phone || !email || 
+                    !institution || !program || !level || !studentIdImage || !checkInDate) {
+                    alert('Please fill in all required fields in Step 1.');
+                    return;
+                }
+
+                // Move to step 2
+                document.getElementById('step1Content').classList.add('hidden');
+                document.getElementById('step2Content').classList.remove('hidden');
+                currentStep = 2;
+            } else if (currentStep === 2) {
+                // Validate step 2 (room selection)
+                if (!selectedRoom) {
+                    alert('Please select a room type.');
+                    return;
+                }
+
+                // Update payment summary
+                const paymentSummary = document.getElementById('paymentSummary');
+                const paymentAmount = document.getElementById('paymentAmount');
+                const paymentReference = document.getElementById('paymentReference');
+                const bedRoomType = document.getElementById('bedRoomType');
+
+                paymentSummary.innerHTML = `
+                    <h4>📋 Booking Summary</h4>
+                    <p><strong>Room Type:</strong> ${selectedRoom.type}</p>
+                    <p><strong>Amount:</strong> GHS ${selectedRoom.price}</p>
+                    <p><strong>Student:</strong> ${document.getElementById('firstName').value} ${document.getElementById('lastName').value}</p>
+                `;
+
+                paymentAmount.textContent = `GHS ${selectedRoom.price}`;
+                paymentReference.textContent = `${document.getElementById('firstName').value} ${document.getElementById('lastName').value}`;
+                bedRoomType.textContent = selectedRoom.type;
+
+                // Move to step 3
+                document.getElementById('step2Content').classList.add('hidden');
+                document.getElementById('step3Content').classList.remove('hidden');
+                currentStep = 3;
+
+                // Enable complete button if payment proof is uploaded
+                checkCompleteButton();
+            }
+        }
+
+        function prevStep() {
+            if (currentStep === 2) {
+                document.getElementById('step2Content').classList.add('hidden');
+                document.getElementById('step1Content').classList.remove('hidden');
+                currentStep = 1;
+            } else if (currentStep === 3) {
+                document.getElementById('step3Content').classList.add('hidden');
+                document.getElementById('step2Content').classList.remove('hidden');
+                currentStep = 2;
+            }
+        }
+
+        function handlePaymentProofUpload(event) {
+            const file = event.target.files[0];
+            const filePreview = document.getElementById('filePreview');
+            const previewImage = document.getElementById('previewImage');
+            const fileInfo = document.getElementById('fileInfo');
+
+            if (file) {
+                // Show preview
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    previewImage.src = e.target.result;
+                    filePreview.style.display = 'block';
+                };
+                reader.readAsDataURL(file);
+
+                // Show file info
+                fileInfo.innerHTML = `
+                    <p><strong>File:</strong> ${file.name}</p>
+                    <p><strong>Size:</strong> ${(file.size / 1024 / 1024).toFixed(2)} MB</p>
+                    <p><strong>Type:</strong> ${file.type}</p>
+                `;
+
+                // Enable complete button
+                checkCompleteButton();
+            }
+        }
+
+        function checkCompleteButton() {
+            const completeBtn = document.getElementById('completeBtn');
+            const paymentProof = document.getElementById('paymentProof');
+            
+            if (selectedRoom && paymentProof.files && paymentProof.files[0]) {
+                completeBtn.disabled = false;
+                completeBtn.style.opacity = '1';
+                completeBtn.style.cursor = 'pointer';
+            } else {
+                completeBtn.disabled = true;
+                completeBtn.style.opacity = '0.6';
+                completeBtn.style.cursor = 'not-allowed';
+            }
+        }
+
+        // Add form validation listeners
+        function addFormValidation() {
+            // Step 1 form validation
+            const step1Inputs = ['firstName', 'lastName', 'indexNumber', 'phone', 'email', 'institution', 'program', 'level', 'studentIdImage', 'checkInDate'];
+            
+            step1Inputs.forEach(inputId => {
+                const input = document.getElementById(inputId);
+                if (input) {
+                    input.addEventListener('change', validateStep1);
+                    input.addEventListener('input', validateStep1);
+                }
+            });
+
+            // Step 2 room selection validation
+            document.querySelectorAll('.room-card').forEach(card => {
+                card.addEventListener('click', validateStep2);
+            });
+        }
+
+        function validateStep1() {
+            const firstName = document.getElementById('firstName').value.trim();
+            const lastName = document.getElementById('lastName').value.trim();
+            const indexNumber = document.getElementById('indexNumber').value.trim();
+            const phone = document.getElementById('phone').value.trim();
+            const email = document.getElementById('email').value.trim();
+            const institution = document.getElementById('institution').value.trim();
+            const program = document.getElementById('program').value.trim();
+            const level = document.getElementById('level').value;
+            const studentIdImage = document.getElementById('studentIdImage').files[0];
+            const checkInDate = document.getElementById('checkInDate').value;
+
+            const nextBtn = document.querySelector('button[onclick="nextStep()"]');
+            if (nextBtn) {
+                if (firstName && lastName && indexNumber && phone && email && 
+                    institution && program && level && studentIdImage && checkInDate) {
+                    nextBtn.disabled = false;
+                    nextBtn.style.opacity = '1';
+                    nextBtn.style.cursor = 'pointer';
+                } else {
+                    nextBtn.disabled = true;
+                    nextBtn.style.opacity = '0.6';
+                    nextBtn.style.cursor = 'not-allowed';
+                }
+            }
+        }
+
+        function validateStep2() {
+            const nextBtn1 = document.getElementById('nextBtn1');
+            if (nextBtn1 && selectedRoom) {
+                nextBtn1.disabled = false;
+                nextBtn1.style.opacity = '1';
+                nextBtn1.style.cursor = 'pointer';
+            } else if (nextBtn1) {
+                nextBtn1.disabled = true;
+                nextBtn1.style.opacity = '0.6';
+                nextBtn1.style.cursor = 'not-allowed';
+            }
+        }
+
         // Initialize on page load
         document.addEventListener('DOMContentLoaded', function() {
             initializeLocalStorage();
+            addFormValidation();
             console.log('Hostel booking system loaded successfully!');
         });
     </script>

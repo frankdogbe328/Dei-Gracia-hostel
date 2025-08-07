@@ -2537,22 +2537,37 @@
         let selectedRoom = null;
         let currentUser = null;
 
-        // Initialize local storage system
+        // Initialize local storage system with fallback
         function initializeLocalStorage() {
             console.log('Local storage system initialized');
             
+            // Test localStorage availability
+            try {
+                localStorage.setItem('test', 'test');
+                localStorage.removeItem('test');
+                console.log('✅ localStorage is available');
+            } catch (error) {
+                console.error('❌ localStorage not available:', error);
+                alert('⚠️ Warning: Local storage is not available. Some features may not work properly.');
+                return;
+            }
+            
             // Initialize default admin if not exists
-            const admins = JSON.parse(localStorage.getItem('admins') || '[]');
-            if (admins.length === 0) {
-                const defaultAdmin = {
-                    name: 'Admin',
-                    email: 'admin@hostel.com',
-                    password: 'admin123',
-                    role: 'admin'
-                };
-                admins.push(defaultAdmin);
-                localStorage.setItem('admins', JSON.stringify(admins));
-                console.log('Default admin created');
+            try {
+                const admins = JSON.parse(localStorage.getItem('admins') || '[]');
+                if (admins.length === 0) {
+                    const defaultAdmin = {
+                        name: 'Admin',
+                        email: 'admin@hostel.com',
+                        password: 'admin123',
+                        role: 'admin'
+                    };
+                    admins.push(defaultAdmin);
+                    localStorage.setItem('admins', JSON.stringify(admins));
+                    console.log('Default admin created');
+                }
+            } catch (error) {
+                console.error('❌ Error initializing admin data:', error);
             }
         }
 
@@ -2626,9 +2641,23 @@
                     createdAt: new Date().toISOString()
                 };
                 
-                // Save to localStorage with error handling
+                // Save to localStorage with enhanced error handling
                 try {
+                    // Check if localStorage is available
+                    if (typeof(Storage) === "undefined") {
+                        throw new Error('localStorage is not supported in this browser');
+                    }
+                    
+                    // Test localStorage write access
+                    try {
+                        localStorage.setItem('test', 'test');
+                        localStorage.removeItem('test');
+                    } catch (testError) {
+                        throw new Error('localStorage write access denied');
+                    }
+                    
                     const bookings = JSON.parse(localStorage.getItem('bookings') || '[]');
+                    console.log('📊 Current bookings count:', bookings.length);
                     
                     // Check for duplicate bookings (same email and room type)
                     const existingBooking = bookings.find(b => 
@@ -2640,8 +2669,36 @@
                         return;
                     }
                     
+                    // Check localStorage quota (rough estimate)
+                    const currentDataSize = JSON.stringify(bookings).length;
+                    const newBookingSize = JSON.stringify(booking).length;
+                    const totalSize = currentDataSize + newBookingSize;
+                    
+                    console.log('📏 Data size check:', {
+                        current: currentDataSize,
+                        new: newBookingSize,
+                        total: totalSize
+                    });
+                    
+                    // If data is getting too large, clean up old bookings
+                    if (totalSize > 5000000) { // 5MB limit
+                        console.log('🧹 Cleaning up old bookings due to size limit');
+                        // Keep only last 50 bookings
+                        const recentBookings = bookings.slice(-50);
+                        localStorage.setItem('bookings', JSON.stringify(recentBookings));
+                        bookings.length = 0;
+                        bookings.push(...recentBookings);
+                    }
+                    
                     bookings.push(booking);
-                    localStorage.setItem('bookings', JSON.stringify(bookings));
+                    const finalData = JSON.stringify(bookings);
+                    
+                    // Try to save with size check
+                    if (finalData.length > 10000000) { // 10MB hard limit
+                        throw new Error('Booking data too large. Please contact support.');
+                    }
+                    
+                    localStorage.setItem('bookings', finalData);
                     console.log('✅ Booking saved successfully to localStorage');
                     
                     // Show comprehensive success message
@@ -2691,8 +2748,26 @@
                     console.log('🎯 Booking process completed successfully!');
                     
                 } catch (storageError) {
-                    console.error('❌ Storage error:', storageError);
-                    alert('❌ Error saving booking. Please try again or contact support if the problem persists.');
+                    console.error('❌ Storage error details:', {
+                        error: storageError.message,
+                        name: storageError.name,
+                        stack: storageError.stack
+                    });
+                    
+                    // Provide specific error messages based on error type
+                    let errorMessage = '❌ Error saving booking. ';
+                    
+                    if (storageError.message.includes('localStorage is not supported')) {
+                        errorMessage += 'Your browser does not support local storage. Please try a different browser.';
+                    } else if (storageError.message.includes('write access denied')) {
+                        errorMessage += 'Storage access denied. Please check your browser settings or try in normal browsing mode.';
+                    } else if (storageError.message.includes('too large')) {
+                        errorMessage += 'Data size limit reached. Please contact support.';
+                    } else {
+                        errorMessage += 'Please try again or contact support if the problem persists.';
+                    }
+                    
+                    alert(errorMessage);
                     return;
                 }
                 

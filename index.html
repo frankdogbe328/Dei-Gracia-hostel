@@ -122,14 +122,15 @@
             margin-bottom: 2rem;
         }
 
-        /* Sleek Location Map Section Styles */
+        /* Ultra-Modern Location Map Section Styles */
         .location-section {
-            margin: 5rem 0;
-            padding: 3rem 0;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            border-radius: 30px;
+            margin: 6rem 0;
+            padding: 4rem 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+            border-radius: 40px;
             position: relative;
             overflow: hidden;
+            box-shadow: 0 30px 60px rgba(102, 126, 234, 0.3);
         }
 
         .location-section::before {
@@ -139,8 +140,69 @@
             left: 0;
             right: 0;
             bottom: 0;
-            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="25" cy="25" r="1" fill="white" opacity="0.1"/><circle cx="75" cy="75" r="1" fill="white" opacity="0.1"/><circle cx="50" cy="10" r="0.5" fill="white" opacity="0.1"/><circle cx="10" cy="60" r="0.5" fill="white" opacity="0.1"/><circle cx="90" cy="40" r="0.5" fill="white" opacity="0.1"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
+            background: 
+                radial-gradient(circle at 20% 80%, rgba(120, 119, 198, 0.3) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(255, 119, 198, 0.3) 0%, transparent 50%),
+                radial-gradient(circle at 40% 40%, rgba(120, 219, 255, 0.2) 0%, transparent 50%);
             pointer-events: none;
+        }
+
+        /* Floating Elements Animation */
+        .floating-elements {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .floating-card {
+            position: absolute;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 20px;
+            padding: 1rem 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            animation: float 6s ease-in-out infinite;
+        }
+
+        .floating-card:nth-child(1) {
+            top: 10%;
+            left: 5%;
+            animation-delay: 0s;
+        }
+
+        .floating-card:nth-child(2) {
+            top: 20%;
+            right: 10%;
+            animation-delay: 2s;
+        }
+
+        .floating-card:nth-child(3) {
+            bottom: 15%;
+            left: 15%;
+            animation-delay: 4s;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-20px) rotate(2deg); }
+        }
+
+        .card-icon {
+            font-size: 1.5rem;
+        }
+
+        .card-text {
+            color: white;
+            font-weight: 600;
+            font-size: 0.9rem;
         }
 
         .location-content {
@@ -154,22 +216,95 @@
 
         .location-info {
             background: rgba(255, 255, 255, 0.95);
-            padding: 2.5rem;
-            border-radius: 25px;
-            backdrop-filter: blur(10px);
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 3rem;
+            border-radius: 30px;
+            backdrop-filter: blur(20px);
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            position: relative;
+            z-index: 2;
+        }
+
+        .section-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .badge-icon {
+            font-size: 1rem;
         }
 
         .location-info h2 {
             color: #2c3e50;
-            font-size: 2.5rem;
-            margin-bottom: 2rem;
-            font-weight: 700;
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #667eea, #764ba2, #f093fb);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            line-height: 1.2;
+        }
+
+        .location-subtitle {
+            font-size: 1.3rem;
+            color: #7f8c8d;
+            margin-bottom: 2.5rem;
+            font-weight: 500;
+        }
+
+        .contact-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+            margin-bottom: 3rem;
+        }
+
+        .contact-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1.5rem;
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            transition: all 0.3s ease;
+        }
+
+        .contact-item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
+            background: linear-gradient(135deg, #ffffff, #f8f9fa);
+        }
+
+        .contact-icon {
+            font-size: 2rem;
             background: linear-gradient(135deg, #667eea, #764ba2);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
+        }
+
+        .contact-details h4 {
+            color: #2c3e50;
+            font-weight: 700;
+            font-size: 1.1rem;
+            margin: 0 0 0.3rem 0;
+        }
+
+        .contact-details p {
+            color: #7f8c8d;
+            font-size: 0.9rem;
+            margin: 0;
         }
 
         .location-info p {
@@ -186,7 +321,77 @@
         }
 
         .location-features {
-            margin-top: 2.5rem;
+            margin-top: 3rem;
+        }
+
+        .location-features h3 {
+            color: #2c3e50;
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+        }
+
+        .feature-card {
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+            padding: 2rem;
+            border-radius: 25px;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .feature-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .feature-card:hover::before {
+            left: 100%;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+            background: linear-gradient(135deg, #ffffff, #f8f9fa);
+        }
+
+        .feature-card .feature-icon {
+            font-size: 3rem;
+            background: linear-gradient(135deg, #667eea, #764ba2, #f093fb);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 1rem;
+            display: block;
+        }
+
+        .feature-card h4 {
+            color: #2c3e50;
+            font-weight: 700;
+            font-size: 1.2rem;
+            margin-bottom: 0.8rem;
+        }
+
+        .feature-card p {
+            color: #7f8c8d;
+            font-size: 0.95rem;
+            line-height: 1.5;
+            margin: 0;
         }
 
         .feature {
@@ -218,49 +423,79 @@
 
         .map-container {
             position: relative;
-            border-radius: 25px;
+            border-radius: 30px;
             overflow: hidden;
-            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.15);
             transform: perspective(1000px) rotateY(-5deg);
             transition: all 0.3s ease;
+            background: white;
+            z-index: 2;
         }
 
         .map-container:hover {
             transform: perspective(1000px) rotateY(0deg);
-            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 40px 80px rgba(0, 0, 0, 0.2);
+        }
+
+        .map-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.5rem 2rem;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+        }
+
+        .map-title {
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+
+        .map-icon {
+            font-size: 1.5rem;
+        }
+
+        .map-actions {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .action-btn {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: none;
+            padding: 0.8rem 1.2rem;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .action-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .btn-icon {
+            font-size: 1rem;
+        }
+
+        .map-wrapper {
+            position: relative;
         }
 
         .map-container iframe {
             width: 100%;
             height: 450px;
             border: none;
-            border-radius: 25px;
-        }
-
-        .map-overlay {
-            position: absolute;
-            bottom: 1.5rem;
-            right: 1.5rem;
-            z-index: 10;
-        }
-
-        .map-overlay .btn {
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            color: white;
-            border: none;
-            padding: 1rem 2rem;
-            border-radius: 30px;
-            font-weight: 600;
-            font-size: 1rem;
-            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
-            transition: all 0.3s ease;
-            backdrop-filter: blur(10px);
-        }
-
-        .map-overlay .btn:hover {
-            transform: translateY(-3px) scale(1.05);
-            box-shadow: 0 12px 35px rgba(102, 126, 234, 0.6);
-            background: linear-gradient(135deg, #5a6fd8, #6a4190);
         }
 
         /* Responsive design for map section */
@@ -269,6 +504,10 @@
                 margin: 3rem 0;
                 padding: 2rem 0;
                 border-radius: 20px;
+            }
+
+            .floating-card {
+                display: none;
             }
 
             .location-content {
@@ -282,11 +521,29 @@
             }
 
             .location-info h2 {
-                font-size: 2rem;
+                font-size: 2.2rem;
             }
 
-            .location-info p {
+            .location-subtitle {
                 font-size: 1.1rem;
+            }
+
+            .contact-grid {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+
+            .contact-item {
+                padding: 1.2rem;
+            }
+
+            .features-grid {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+
+            .feature-card {
+                padding: 1.5rem;
             }
 
             .map-container {
@@ -294,18 +551,20 @@
                 border-radius: 20px;
             }
 
+            .map-header {
+                padding: 1rem 1.5rem;
+                flex-direction: column;
+                gap: 1rem;
+                text-align: center;
+            }
+
+            .map-actions {
+                width: 100%;
+                justify-content: center;
+            }
+
             .map-container iframe {
                 height: 350px;
-            }
-
-            .map-overlay {
-                bottom: 1rem;
-                right: 1rem;
-            }
-
-            .map-overlay .btn {
-                padding: 0.8rem 1.5rem;
-                font-size: 0.9rem;
             }
         }
 
@@ -2032,44 +2291,118 @@
             </div>
             
             <!-- Location Map Section -->
+            <!-- Modern Location Map Section -->
             <div class="location-section">
+                <!-- Floating Elements -->
+                <div class="floating-elements">
+                    <div class="floating-card" data-speed="0.5">
+                        <div class="card-icon">🏠</div>
+                        <div class="card-text">Premium Location</div>
+                    </div>
+                    <div class="floating-card" data-speed="0.3">
+                        <div class="card-icon">🌟</div>
+                        <div class="card-text">5-Star Rated</div>
+                    </div>
+                    <div class="floating-card" data-speed="0.7">
+                        <div class="card-icon">⚡</div>
+                        <div class="card-text">24/7 Support</div>
+                    </div>
+                </div>
+
                 <div class="location-content">
                     <div class="location-info">
-                        <h2>📍 Find Us</h2>
-                        <p><strong>Dei Gratia Hostel</strong></p>
-                        <p>📍 (formerly Royal Hostel)</p>
-                        <p>📍 Accra, Ghana</p>
-                        <p>📞 Contact: +233 54 532 6363</p>
-                        <p>📧 Email: info@deigratciahostel.com</p>
+                        <div class="section-badge">
+                            <span class="badge-icon">📍</span>
+                            <span class="badge-text">Our Location</span>
+                        </div>
+                        <h2>Find Your Perfect Stay</h2>
+                        <p class="location-subtitle">Experience comfort and convenience in the heart of Accra</p>
+                        
+                        <div class="contact-grid">
+                            <div class="contact-item">
+                                <div class="contact-icon">🏠</div>
+                                <div class="contact-details">
+                                    <h4>Dei Gratia Hostel</h4>
+                                    <p>(formerly Royal Hostel)</p>
+                                </div>
+                            </div>
+                            <div class="contact-item">
+                                <div class="contact-icon">📍</div>
+                                <div class="contact-details">
+                                    <h4>Accra, Ghana</h4>
+                                    <p>Prime location</p>
+                                </div>
+                            </div>
+                            <div class="contact-item">
+                                <div class="contact-icon">📞</div>
+                                <div class="contact-details">
+                                    <h4>+233 54 532 6363</h4>
+                                    <p>Call us anytime</p>
+                                </div>
+                            </div>
+                            <div class="contact-item">
+                                <div class="contact-icon">📧</div>
+                                <div class="contact-details">
+                                    <h4>info@deigratciahostel.com</h4>
+                                    <p>Get in touch</p>
+                                </div>
+                            </div>
+                        </div>
+
                         <div class="location-features">
-                            <div class="feature">
-                                <span class="feature-icon">🚌</span>
-                                <span>Near major transport routes</span>
-                            </div>
-                            <div class="feature">
-                                <span class="feature-icon">🏫</span>
-                                <span>Close to universities</span>
-                            </div>
-                            <div class="feature">
-                                <span class="feature-icon">🛒</span>
-                                <span>Near shopping centers</span>
+                            <h3>Why Choose Our Location?</h3>
+                            <div class="features-grid">
+                                <div class="feature-card">
+                                    <div class="feature-icon">🚌</div>
+                                    <h4>Transport Hub</h4>
+                                    <p>Near major transport routes for easy commuting</p>
+                                </div>
+                                <div class="feature-card">
+                                    <div class="feature-icon">🏫</div>
+                                    <h4>University Proximity</h4>
+                                    <p>Close to major universities and educational institutions</p>
+                                </div>
+                                <div class="feature-card">
+                                    <div class="feature-icon">🛒</div>
+                                    <h4>Shopping & Dining</h4>
+                                    <p>Surrounded by shopping centers and restaurants</p>
+                                </div>
+                                <div class="feature-card">
+                                    <div class="feature-icon">🏥</div>
+                                    <h4>Healthcare Access</h4>
+                                    <p>Near hospitals and medical facilities</p>
+                                </div>
                             </div>
                         </div>
                     </div>
+                    
                     <div class="map-container">
-                        <iframe 
-                            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3438.224025781181!2d-0.24256802575652556!3d5.602285433184065!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0xfdf9970cb6737c5%3A0xd897a2c2c84e3318!2sDei%20Gratia%20hostel%20(formerly%20Royal%20hostel)!5e1!3m2!1sen!2sgh!4v1754572509251!5m2!1sen!2sgh" 
-                            width="100%" 
-                            height="400" 
-                            style="border:0; border-radius: 15px;" 
-                            allowfullscreen="" 
-                            loading="lazy" 
-                            referrerpolicy="no-referrer-when-downgrade">
-                        </iframe>
-                        <div class="map-overlay">
-                            <button class="btn btn-primary" onclick="openInMaps()">
-                                📍 Open in Maps
-                            </button>
+                        <div class="map-header">
+                            <div class="map-title">
+                                <span class="map-icon">🗺️</span>
+                                <span>Interactive Map</span>
+                            </div>
+                            <div class="map-actions">
+                                <button class="action-btn" onclick="openInMaps()">
+                                    <span class="btn-icon">📍</span>
+                                    <span class="btn-text">Directions</span>
+                                </button>
+                                <button class="action-btn" onclick="shareLocation()">
+                                    <span class="btn-icon">📤</span>
+                                    <span class="btn-text">Share</span>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="map-wrapper">
+                            <iframe 
+                                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3438.224025781181!2d-0.24256802575652556!3d5.602285433184065!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0xfdf9970cb6737c5%3A0xd897a2c2c84e3318!2sDei%20Gratia%20hostel%20(formerly%20Royal%20hostel)!5e1!3m2!1sen!2sgh!4v1754572509251!5m2!1sen!2sgh" 
+                                width="100%" 
+                                height="450" 
+                                style="border:0;" 
+                                allowfullscreen="" 
+                                loading="lazy" 
+                                referrerpolicy="no-referrer-when-downgrade">
+                            </iframe>
                         </div>
                     </div>
                 </div>
@@ -3716,6 +4049,26 @@
             } else {
                 // Desktop - open in Google Maps web
                 window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`);
+            }
+        }
+
+        function shareLocation() {
+            const address = 'Dei Gratia Hostel (formerly Royal Hostel), Accra, Ghana';
+            const url = 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(address);
+            
+            if (navigator.share) {
+                navigator.share({
+                    title: 'Dei Gratia Hostel Location',
+                    text: 'Check out this amazing hostel in Accra, Ghana!',
+                    url: url
+                });
+            } else {
+                // Fallback: copy to clipboard
+                navigator.clipboard.writeText(url).then(() => {
+                    alert('📍 Location link copied to clipboard!');
+                }).catch(() => {
+                    alert('📍 Location: ' + address + '\n\n' + url);
+                });
             }
         }
 
